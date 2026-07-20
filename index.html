@@ -1,0 +1,2735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PeriFerry Employee Portal</title>
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at 10% 20%, rgba(31, 60, 126, 0.04) 0%, rgba(80, 70, 182, 0.02) 90.1%) !important;
+      overflow-x: hidden;
+    }
+    
+    /* Neon background blobs using brand colors at soft 5% opacity */
+    .aesthetic-blob-1 {
+      position: fixed;
+      top: -10%;
+      left: -10%;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: rgba(31, 60, 126, 0.05);
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .aesthetic-blob-2 {
+      position: fixed;
+      bottom: -10%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: rgba(200, 70, 158, 0.05);
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .aesthetic-blob-3 {
+      position: fixed;
+      top: 35%;
+      right: 5%;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      background: rgba(80, 70, 182, 0.05);
+      filter: blur(140px);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .brand-gradient {
+      background: linear-gradient(135deg, #1f3c7e 0%, #5046b6 50%, #c8469e 100%);
+    }
+    .brand-gradient-hover:hover {
+      background: linear-gradient(135deg, #183066 0%, #3e359c 50%, #ad3785 100%);
+    }
+    
+    /* Light-themed translucent Glass/Premium Card panels */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.75) !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.5) !important;
+      box-shadow: 0 8px 32px 0 rgba(31, 60, 126, 0.04) !important;
+    }
+    .glass-card-dark {
+      background: rgba(31, 60, 126, 0.03) !important;
+      backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(31, 60, 126, 0.08) !important;
+    }
+    
+    .premium-glass {
+      background: rgba(255, 255, 255, 0.75) !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.5) !important;
+      box-shadow: 0 12px 40px 0 rgba(31, 60, 126, 0.05) !important;
+    }
+    .premium-glass-dark {
+      background: rgba(31, 60, 126, 0.02) !important;
+      backdrop-filter: blur(16px) !important;
+      border: 1px solid rgba(31, 60, 126, 0.06) !important;
+    }
+    
+    .hover-lift {
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    .hover-lift:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 40px -12px rgba(80, 70, 182, 0.15) !important;
+    }
+    
+    /* Kanban drag scrollbars */
+    .kanban-col::-webkit-scrollbar {
+      width: 4px;
+    }
+    .kanban-col::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .kanban-col::-webkit-scrollbar-thumb {
+      background: rgba(80, 70, 182, 0.2);
+      border-radius: 4px;
+    }
+    .kanban-col::-webkit-scrollbar-thumb:hover {
+      background: rgba(80, 70, 182, 0.4);
+    }
+    .custom-shadow {
+      box-shadow: 0 10px 30px -5px rgba(31, 60, 126, 0.08);
+    }
+    .custom-shadow-lg {
+      box-shadow: 0 20px 40px -15px rgba(31, 60, 126, 0.15);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+      animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    @keyframes spinGlow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .aesthetic-spinner {
+      width: 44px;
+      height: 44px;
+      border: 2.5px solid rgba(80, 70, 182, 0.08);
+      border-top-color: #5046b6;
+      border-right-color: #c8469e;
+      border-radius: 50%;
+      animation: spinGlow 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      filter: drop-shadow(0px 0px 8px rgba(80, 70, 182, 0.3));
+    }
+    
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulse-effect {
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandBlue: '#1f3c7e',
+            brandPurple: '#5046b6',
+            brandPink: '#c8469e',
+          },
+          borderRadius: {
+            'xl': '1rem',
+            '2xl': '1.5rem',
+            '3xl': '2rem',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col antialiased relative">
+  <!-- Aesthetic Floating Gradient Blobs -->
+  <div class="aesthetic-blob-1"></div>
+  <div class="aesthetic-blob-2"></div>
+  <div class="aesthetic-blob-3"></div>
+
+  <!-- ==================== TOP NAVIGATION HEADER ==================== -->
+  <header id="app-header" class="hidden glass-card sticky top-0 z-40 border-b border-slate-200/50 py-3 px-6 shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <!-- Logo Container -->
+      <div class="flex items-center space-x-3">
+        <div id="header-logo-container" class="h-10 w-auto flex items-center">
+          <!-- Inline SVG or Img Tag inserted here -->
+        </div>
+      </div>
+      
+      <!-- Right Metadata & Session Info -->
+      <div class="flex items-center space-x-4">
+        <!-- Date / Time -->
+        <div class="text-right hidden md:block">
+          <div id="header-date" class="text-xs text-slate-500 font-medium">Monday, July 6, 2026</div>
+          <div id="header-time" class="text-sm font-semibold text-brandBlue">15:30:00</div>
+        </div>
+        <!-- Status indicator -->
+        <div id="header-status-badge" class="flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100">
+          <span class="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse"></span>
+          Logged Out
+        </div>
+        <!-- User Pill -->
+        <div class="flex items-center space-x-2 bg-slate-100/80 px-3 py-1.5 rounded-xl border border-slate-200/50">
+          <div class="h-7 w-7 rounded-full bg-brandBlue text-white flex items-center justify-center text-xs font-bold uppercase" id="user-avatar-initial">
+            -
+          </div>
+          <div class="text-left">
+            <div class="text-xs font-bold text-slate-700" id="header-username">Guest</div>
+            <div class="text-[10px] text-slate-400 capitalize" id="header-role">employee</div>
+          </div>
+        </div>
+        <!-- Quick Log-out Account Button -->
+        <button onclick="logoutAccount()" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition duration-200" title="Sign Out">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
+  <main class="flex-grow flex flex-col p-4 md:p-6 max-w-7xl w-full mx-auto justify-center">
+
+    <!-- ==================== 1. CONFIGURATION SCREEN ==================== -->
+    <section id="screen-config" class="hidden max-w-md w-full mx-auto my-auto transition-all duration-300">
+      <div class="premium-glass p-8 rounded-3xl text-center">
+        <!-- Brand Logo Icon in Config -->
+        <div class="mx-auto h-16 w-16 mb-6 flex items-center justify-center rounded-2xl bg-indigo-50 border border-indigo-100">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brandPurple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.3 0-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        
+        <h2 class="text-xl font-bold text-slate-800 mb-2">Connect to Database</h2>
+        <p class="text-sm text-slate-500 mb-6">Enter your Google Apps Script Web App URL below to connect the application to the spreadsheet.</p>
+        
+        <div class="space-y-4 text-left">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Apps Script Web App URL</label>
+            <input type="text" id="config-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandPurple focus:border-transparent text-sm transition duration-200">
+          </div>
+          
+          <button onclick="saveConfiguration()" class="w-full py-3 rounded-xl text-white font-semibold text-sm brand-gradient brand-gradient-hover shadow-md shadow-brandBlue/10 transition duration-200">
+            Save & Connect
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. LOGIN SCREEN ==================== -->
+    <section id="screen-login" class="hidden max-w-md w-full mx-auto my-auto transition-all duration-300">
+      <div class="premium-glass p-8 rounded-3xl">
+        <!-- Logo Header -->
+        <div class="flex flex-col items-center mb-8">
+          <div id="login-logo-container" class="h-14 w-auto mb-4 flex items-center justify-center">
+            <!-- Inline SVG or Logo Img dynamically set -->
+          </div>
+          <p class="text-xs text-slate-400 tracking-wider uppercase font-semibold">Employee Portal & Admin Suite</p>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Username</label>
+            <input type="text" id="login-username" placeholder="e.g. gopika" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent text-sm transition duration-200">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
+            <input type="password" id="login-password" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent text-sm transition duration-200">
+          </div>
+          
+          <!-- Error message container -->
+          <div id="login-error" class="hidden text-xs font-medium text-red-500 bg-red-50 border border-red-100 p-3 rounded-xl"></div>
+          
+          <button onclick="attemptLogin()" id="login-btn" class="w-full py-3 rounded-xl text-white font-semibold text-sm brand-gradient brand-gradient-hover shadow-md shadow-brandBlue/10 transition duration-200 flex justify-center items-center">
+            Sign In
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 3. ROLE SELECTION SCREEN ==================== -->
+    <section id="screen-role-select" class="hidden max-w-2xl w-full mx-auto my-auto transition-all duration-300">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-slate-800">Welcome, <span id="role-select-name" class="text-brandBlue">User</span></h2>
+        <p class="text-slate-500 text-sm mt-1">Select the dashboard you want to access today.</p>
+      </div>
+      
+      <div id="role-options-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+        <!-- Dynamically rendered role options -->
+      </div>
+    </section>
+
+    <!-- ==================== 4. EMPLOYEE PORTAL ==================== -->
+    <section id="screen-employee" class="hidden w-full flex flex-col space-y-6 transition-all duration-300">
+      <!-- Welcome & Action Summary Bar -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 premium-glass p-5 rounded-2xl">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Hello, <span class="employee-name text-brandBlue">Employee</span> 👋</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Let's log your attendance and organize your daily plan.</p>
+        </div>
+        <!-- Status & Log buttons -->
+        <div class="flex items-center space-x-3">
+          <div id="attendance-session-timer" class="hidden text-right mr-2">
+            <span class="block text-[10px] text-slate-400 font-bold uppercase">Time Logged-In</span>
+            <span id="session-duration" class="text-sm font-bold text-brandPurple">00:00:00</span>
+          </div>
+          <button id="btn-checkin" onclick="toggleAttendance('login')" class="px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-brandBlue hover:bg-brandBlue/90 transition shadow-md shadow-brandBlue/10 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Log In
+          </button>
+          <button id="btn-checkout" onclick="toggleAttendance('logout')" class="px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-red-600 hover:bg-red-700 transition shadow-md shadow-red-600/10 flex items-center hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Log Out
+          </button>
+          
+          <button id="btn-back-to-portal-sel" onclick="backToDashboardSelection()" class="px-4 py-2.5 rounded-xl font-medium text-xs text-brandPurple bg-brandPurple/5 border border-brandPurple/10 hover:bg-brandPurple/10 transition hidden">
+            Switch Dashboard
+          </button>
+        </div>
+      </div>
+
+      <!-- Plan The Day Card (Visible if not planned or as header edit) -->
+      <div id="plan-day-section" class="premium-glass rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-3">
+            <div class="p-2 rounded-xl bg-brandBlue/10 text-brandBlue">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">Plan Your Day</h3>
+              <p class="text-xs text-slate-500">List the tasks you intend to work on today. They will automatically be added to your Kanban board.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div id="task-inputs" class="space-y-2">
+            <div class="flex items-center space-x-2">
+              <input type="text" class="task-input-item w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent transition" placeholder="e.g. Design the client mockup dashboard">
+              <button onclick="removeTaskInput(this)" class="p-2 text-slate-400 hover:text-red-500 rounded-xl transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="flex justify-between items-center pt-2">
+            <button onclick="addTaskInput()" class="px-4 py-2 border border-dashed border-slate-300 hover:border-brandPurple hover:bg-brandPurple/5 text-xs font-semibold text-slate-600 hover:text-brandPurple rounded-xl transition flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+              Add Task Row
+            </button>
+            <button onclick="submitDayPlan()" class="px-5 py-2 brand-gradient brand-gradient-hover text-white text-xs font-semibold rounded-xl shadow-md transition">
+              Submit Daily Plan
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KANBAN BOARD CONTAINER -->
+      <div class="flex items-center justify-between mt-2 mb-2">
+        <h3 class="font-bold text-slate-800 text-sm">Kanban Board Tasks</h3>
+        <button id="btn-sync-kanban" onclick="syncKanbanBoard()" class="px-4 py-2 bg-brandBlue hover:bg-brandBlue/90 text-white text-xs font-bold rounded-xl transition flex items-center shadow-md shadow-brandBlue/10 hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3 3L22 4" /></svg>
+          Sync Changes (<span id="unsaved-task-count">0</span>)
+        </button>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Column: To-Do -->
+        <div class="bg-slate-100/60 border border-slate-200/50 rounded-2xl p-4 flex flex-col h-[450px]">
+          <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/50">
+            <div class="flex items-center space-x-2">
+              <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+              <h4 class="font-bold text-slate-700 text-sm">To Do</h4>
+            </div>
+            <span id="count-todo" class="px-2 py-0.5 bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold">0</span>
+          </div>
+          <div id="col-todo" class="kanban-col space-y-3 flex-grow overflow-y-auto pb-4">
+            <!-- Cards go here -->
+          </div>
+        </div>
+
+        <!-- Column: In Progress -->
+        <div class="bg-slate-100/60 border border-slate-200/50 rounded-2xl p-4 flex flex-col h-[450px]">
+          <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/50">
+            <div class="flex items-center space-x-2">
+              <span class="h-2 w-2 rounded-full bg-brandPurple"></span>
+              <h4 class="font-bold text-slate-700 text-sm">In Progress</h4>
+            </div>
+            <span id="count-inprogress" class="px-2 py-0.5 bg-brandPurple/10 text-brandPurple rounded-lg text-xs font-semibold">0</span>
+          </div>
+          <div id="col-inprogress" class="kanban-col space-y-3 flex-grow overflow-y-auto pb-4">
+            <!-- Cards go here -->
+          </div>
+        </div>
+
+        <!-- Column: Completed -->
+        <div class="bg-slate-100/60 border border-slate-200/50 rounded-2xl p-4 flex flex-col h-[450px]">
+          <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/50">
+            <div class="flex items-center space-x-2">
+              <span class="h-2 w-2 rounded-full bg-green-500"></span>
+              <h4 class="font-bold text-slate-700 text-sm">Completed</h4>
+            </div>
+            <span id="count-completed" class="px-2 py-0.5 bg-green-50 text-green-600 rounded-lg text-xs font-semibold">0</span>
+          </div>
+          <div id="col-completed" class="kanban-col space-y-3 flex-grow overflow-y-auto pb-4">
+            <!-- Cards go here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- DAILY SUMMARY CARD -->
+      <div class="premium-glass rounded-2xl p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-100 gap-4 mb-4">
+          <div class="flex items-center space-x-3">
+            <div class="p-2 rounded-xl bg-brandPink/10 text-brandPink">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">Daily Work Summary</h3>
+              <p class="text-xs text-slate-500">Review, edit, and submit your summary of work done today.</p>
+            </div>
+          </div>
+          <button onclick="generateAutoSummary()" class="px-4 py-2 border border-slate-200 hover:border-brandPink hover:bg-brandPink/5 text-xs font-semibold rounded-xl text-slate-600 hover:text-brandPink transition flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5" /></svg>
+            Auto-Generate Summary
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <textarea id="daily-summary-text" rows="4" placeholder="Briefly describe what you worked on, milestones achieved, or blockers encountered..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandPink focus:border-transparent text-sm transition duration-200"></textarea>
+          
+          <div class="flex justify-end">
+            <button onclick="submitDailySummary()" class="px-6 py-2.5 rounded-xl text-white font-semibold text-xs bg-brandPink hover:bg-brandPink/95 shadow-md shadow-brandPink/15 transition flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+              Submit Daily Summary
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 5. HR / MANAGER DASHBOARD ==================== -->
+    <section id="screen-manager" class="hidden w-full flex flex-col space-y-6 transition-all duration-300">
+      <!-- Title header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-5 rounded-2xl border border-slate-200/50 shadow-sm">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">HR & Manager Analytics</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Real-time attendance logs, employee Kanban boards, and work summaries.</p>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+          <button onclick="loadManagerData(true)" class="p-2.5 rounded-xl text-slate-500 hover:text-brandBlue hover:bg-slate-100 border border-slate-200 transition flex items-center justify-center" title="Refresh Data">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1 1 21.21 8H18.5" />
+            </svg>
+          </button>
+          <button id="btn-back-to-mgr-sel" onclick="backToDashboardSelection()" class="px-4 py-2.5 rounded-xl font-semibold text-xs text-white brand-gradient brand-gradient-hover shadow-md transition hidden">
+            Switch Dashboard
+          </button>
+        </div>
+      </div>
+
+      <!-- ANALYTICS CARDS (CHARTS) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Daily Activity Graph Card -->
+        <div class="lg:col-span-2 premium-glass rounded-2xl p-5 flex flex-col">
+          <h3 class="font-bold text-slate-800 text-sm mb-3">Average Working Hours (Weekly)</h3>
+          <div class="relative flex-grow h-[220px]">
+            <canvas id="hoursChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Attendance Stats summary -->
+        <div class="premium-glass rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm mb-4">Today's Attendance Status</h3>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center p-3 bg-indigo-50/50 rounded-xl border border-indigo-50">
+                <span class="text-xs text-slate-500 font-medium">Logged In Now</span>
+                <span id="stat-active-count" class="text-base font-bold text-brandBlue">0</span>
+              </div>
+              <div class="flex justify-between items-center p-3 bg-green-50/30 rounded-xl border border-green-100/50">
+                <span class="text-xs text-slate-500 font-medium">Completed Logs</span>
+                <span id="stat-logged-out-count" class="text-base font-bold text-green-600">0</span>
+              </div>
+              <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span class="text-xs text-slate-500 font-medium">Total Registered</span>
+                <span id="stat-total-count" class="text-base font-bold text-slate-700">0</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="text-[10px] text-slate-400 mt-4 text-center font-medium">Last updated: <span id="mgr-last-update">-</span></div>
+        </div>
+      </div>
+
+      <!-- TAB CONTAINER -->
+      <div class="premium-glass rounded-3xl overflow-hidden">
+        <!-- Tab Headers -->
+        <div class="flex border-b border-slate-100 bg-slate-50/40">
+          <button onclick="switchMgrTab('attendance')" id="mgr-tab-attendance" class="px-6 py-4 text-xs font-bold text-brandBlue border-b-2 border-brandBlue transition">
+            Attendance Grid
+          </button>
+          <button onclick="switchMgrTab('timeline')" id="mgr-tab-timeline" class="px-6 py-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition">
+            Attendance Timeline
+          </button>
+          <button onclick="switchMgrTab('kanbans')" id="mgr-tab-kanbans" class="px-6 py-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition">
+            Employee Kanban Boards
+          </button>
+          <button onclick="switchMgrTab('summaries')" id="mgr-tab-summaries" class="px-6 py-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition">
+            Daily Work Summaries
+          </button>
+          <button onclick="switchMgrTab('leaves')" id="mgr-tab-leaves" class="px-6 py-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition">
+            Leaves Tracker
+          </button>
+        </div>
+
+        <!-- Tab Body: Attendance -->
+        <div id="mgr-body-attendance" class="mgr-tab-body p-6">
+          <!-- Sort controls -->
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="text-xs font-bold text-slate-600">Attendance Log Entries</h4>
+            <button onclick="toggleAttendanceSort()" class="px-3 py-1.5 text-xs border border-slate-200 rounded-xl hover:bg-slate-50 font-semibold text-slate-600 transition flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+              Sort Date: <span id="mgr-attendance-sort-text" class="ml-1 text-brandBlue font-bold">Newest First</span>
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-slate-400 text-[10px] font-bold tracking-wider uppercase">
+                  <th class="pb-3 pr-4">Employee</th>
+                  <th class="pb-3 px-4">Date</th>
+                  <th class="pb-3 px-4">Log In</th>
+                  <th class="pb-3 px-4">Log Out</th>
+                  <th class="pb-3 px-4">Total Hours</th>
+                  <th class="pb-3 pl-4">Status</th>
+                </tr>
+              </thead>
+              <tbody id="mgr-attendance-rows" class="text-sm font-medium text-slate-700 divide-y divide-slate-100">
+                <!-- Rows here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab Body: Timeline -->
+        <div id="mgr-body-timeline" class="mgr-tab-body p-6 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-slate-50 border border-slate-200/50 p-4 rounded-2xl">
+            <div class="flex items-center space-x-3">
+              <label class="text-xs font-bold text-slate-600">Select Date:</label>
+              <input type="date" id="mgr-timeline-date" onchange="renderTimelineSheet()" class="px-4 py-1.5 text-xs border border-slate-200 focus:outline-none rounded-xl">
+            </div>
+            <div class="flex items-center space-x-4 text-xs font-semibold text-slate-500">
+              <div class="flex items-center"><span class="h-3 w-3 rounded-full bg-brandBlue mr-1.5"></span>Offline/Log-out</div>
+              <div class="flex items-center"><span class="h-3 w-3 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>Active Session</div>
+              <div class="flex items-center"><span class="h-3 w-3 rounded-full bg-slate-100 border mr-1.5"></span>Absent</div>
+            </div>
+          </div>
+          <div id="mgr-timeline-sheet" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Timeline rows rendered here -->
+          </div>
+        </div>
+
+        <!-- Tab Body: Kanban Viewer -->
+        <div id="mgr-body-kanbans" class="mgr-tab-body p-6 hidden">
+          <div class="flex items-center space-x-3 mb-6 bg-slate-50 border border-slate-200/50 p-4 rounded-2xl">
+            <label class="text-xs font-bold text-slate-600">Select Employee to inspect:</label>
+            <select id="mgr-kanban-employee-select" onchange="renderSelectedEmployeeKanban()" class="px-4 py-2 text-xs border border-slate-200 focus:outline-none rounded-xl">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- To Do -->
+            <div class="bg-slate-50/50 border border-slate-200/50 rounded-2xl p-4 flex flex-col h-[320px]">
+              <h4 class="font-bold text-slate-500 text-xs tracking-wider uppercase pb-2 border-b border-slate-200/50 mb-3 flex justify-between">
+                <span>To Do</span>
+                <span id="mgr-todo-count" class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px]">0</span>
+              </h4>
+              <div id="mgr-col-todo" class="space-y-2 flex-grow overflow-y-auto kanban-col"></div>
+            </div>
+
+            <!-- In Progress -->
+            <div class="bg-slate-50/50 border border-slate-200/50 rounded-2xl p-4 flex flex-col h-[320px]">
+              <h4 class="font-bold text-brandPurple text-xs tracking-wider uppercase pb-2 border-b border-slate-200/50 mb-3 flex justify-between">
+                <span>In Progress</span>
+                <span id="mgr-inprogress-count" class="bg-brandPurple/10 text-brandPurple px-2 py-0.5 rounded text-[10px]">0</span>
+              </h4>
+              <div id="mgr-col-inprogress" class="space-y-2 flex-grow overflow-y-auto kanban-col"></div>
+            </div>
+
+            <!-- Completed -->
+            <div class="bg-slate-50/50 border border-slate-200/50 rounded-2xl p-4 flex flex-col h-[320px]">
+              <h4 class="font-bold text-green-600 text-xs tracking-wider uppercase pb-2 border-b border-slate-200/50 mb-3 flex justify-between">
+                <span>Completed</span>
+                <span id="mgr-completed-count" class="bg-green-50 text-green-600 px-2 py-0.5 rounded text-[10px]">0</span>
+              </h4>
+              <div id="mgr-col-completed" class="space-y-2 flex-grow overflow-y-auto kanban-col"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Body: Daily Summaries -->
+        <div id="mgr-body-summaries" class="mgr-tab-body p-6 hidden">
+          <!-- Sort controls -->
+          <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+            <h4 class="text-xs font-bold text-slate-600">Submitted Daily Summaries</h4>
+            <button onclick="toggleSummariesSort()" class="px-3 py-1.5 text-xs border border-slate-200 rounded-xl hover:bg-slate-50 font-semibold text-slate-600 transition flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+              Sort Date: <span id="mgr-summaries-sort-text" class="ml-1 text-brandPink font-bold">Newest First</span>
+            </button>
+          </div>
+          <div class="space-y-4" id="mgr-summaries-list">
+            <!-- Dynamic summaries items -->
+          </div>
+        </div>
+
+        <!-- Tab Body: Leaves Tracker -->
+        <div id="mgr-body-leaves" class="mgr-tab-body p-6 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-slate-50 border border-slate-200/50 p-4 rounded-2xl">
+            <div class="flex flex-wrap items-center gap-4">
+              <div class="flex items-center space-x-3">
+                <label class="text-xs font-bold text-slate-600">Select Month:</label>
+                <input type="month" id="mgr-leaves-month" onchange="renderLeavesTracker()" class="px-4 py-1.5 text-xs border border-slate-200 focus:outline-none rounded-xl">
+              </div>
+              <button id="btn-save-leaves" onclick="syncLeavesChanges()" class="px-4 py-2 bg-brandBlue hover:bg-brandBlue/90 text-white text-xs font-bold rounded-xl transition flex items-center shadow-md shadow-brandBlue/10 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                Save Leave Changes (<span id="unsaved-leaves-count">0</span>)
+              </button>
+            </div>
+            <div class="text-xs text-slate-500 font-semibold leading-relaxed">
+              * Note: Casual Leaves accrue at <span class="text-brandBlue font-bold">1.0 day/month</span> (remaining CL carries forward).<br>
+              * Medical Leaves accrue at <span class="text-brandPurple font-bold">1.0 day/month</span> (remaining ML does not carry forward).
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-slate-400 text-[10px] font-bold tracking-wider uppercase">
+                  <th class="pb-3 pr-4">Employee</th>
+                  <th class="pb-3 px-4 text-center">Casual Leaves Taken</th>
+                  <th class="pb-3 px-4 text-center">Medical Leaves Taken</th>
+                  <th class="pb-3 px-4 text-center bg-slate-50/30">Remaining CL (Accrued & Carried Forward)</th>
+                  <th class="pb-3 pl-4 text-center bg-slate-50/30">Remaining ML (This Month)</th>
+                </tr>
+              </thead>
+              <tbody id="mgr-leaves-rows" class="text-sm font-medium text-slate-700 divide-y divide-slate-100">
+                <!-- Rows populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ==================== 6. DEVELOPER / ADMIN PANEL ==================== -->
+    <section id="screen-developer" class="hidden w-full flex flex-col space-y-6 transition-all duration-300">
+      <!-- Title Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-5 rounded-2xl border border-slate-200/50 shadow-sm">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Developer & User Management</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Add, edit, remove, and manage user accounts and system configuration.</p>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+          <button onclick="openUserModal(null)" class="px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-brandPurple hover:bg-brandPurple/90 transition shadow-md flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            Add New User
+          </button>
+          
+          <button id="btn-back-to-dev-sel" onclick="backToDashboardSelection()" class="px-4 py-2.5 rounded-xl font-semibold text-xs text-brandBlue bg-brandBlue/5 border border-brandBlue/10 hover:bg-brandBlue/10 transition hidden">
+            Switch Dashboard
+          </button>
+        </div>
+      </div>
+
+      <!-- Users Grid -->
+      <div class="premium-glass rounded-3xl overflow-hidden p-6">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-100 text-slate-400 text-[10px] font-bold tracking-wider uppercase">
+                <th class="pb-3 pr-4">Username</th>
+                <th class="pb-3 px-4">Password</th>
+                <th class="pb-3 px-4">Roles</th>
+                <th class="pb-3 pl-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dev-user-rows" class="text-sm font-medium text-slate-700 divide-y divide-slate-100">
+              <!-- User rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Local Configuration Config card -->
+      <div class="premium-glass rounded-3xl p-6">
+        <h3 class="font-bold text-slate-800 text-sm mb-4">Local System Settings</h3>
+        <div class="max-w-xl space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Configured Apps Script Web App URL</label>
+            <div class="flex space-x-2">
+              <input type="text" id="dev-config-url" class="w-full px-4 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none" readonly>
+              <button onclick="editConfigUrl()" class="px-4 py-2 text-xs font-bold text-brandBlue border border-brandBlue/20 hover:bg-brandBlue/5 rounded-xl transition">
+                Change URL
+              </button>
+            </div>
+          </div>
+          
+          <div class="pt-4 border-t border-slate-100 mt-4 flex items-center justify-between">
+            <div>
+              <h4 class="text-xs font-bold text-slate-700">Clear All Transactional Logs</h4>
+              <p class="text-[10px] text-slate-400 mt-0.5">Permanently delete leaves records, time logs, task lists, and summaries from the Google Sheet.</p>
+            </div>
+            <button onclick="resetDatabase()" class="px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-red-600 hover:bg-red-700 transition shadow-md flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Reset Database
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== DIALOGS & MODALS ==================== -->
+  
+  <!-- Loading Dialog -->
+  <!-- Loading Dialog -->
+  <div id="modal-loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/25 backdrop-blur-md">
+    <div class="premium-glass p-8 rounded-3xl max-w-[240px] w-full text-center flex flex-col items-center space-y-4 border border-white/40">
+      <!-- Minimalist Glowing Ring -->
+      <div class="aesthetic-spinner"></div>
+      
+      <!-- Aesthetic text -->
+      <div class="space-y-0.5">
+        <p id="loader-dynamic-text" class="text-xs text-brandBlue font-bold tracking-wide uppercase">Synchronizing...</p>
+        <p class="text-[9px] text-slate-400 font-semibold uppercase">Please wait</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Add/Edit Modal -->
+  <div id="modal-user" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xl max-w-md w-full">
+      <h3 id="user-modal-title" class="font-bold text-slate-800 text-base mb-4">Add User</h3>
+      
+      <input type="hidden" id="user-modal-orig-username">
+      
+      <div class="space-y-4 text-left">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Username</label>
+          <input type="text" id="user-modal-username" placeholder="gopika" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm transition">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
+          <input type="text" id="user-modal-password" placeholder="Password" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm transition">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Access Roles</label>
+          <div class="space-y-2 mt-2">
+            <label class="flex items-center space-x-2 text-xs font-medium text-slate-700">
+              <input type="checkbox" id="role-cb-employee" value="employee" checked disabled class="rounded border-slate-300 text-brandBlue focus:ring-brandBlue">
+              <span>Employee Portal Access (Required)</span>
+            </label>
+            <label class="flex items-center space-x-2 text-xs font-medium text-slate-700">
+              <input type="checkbox" id="role-cb-manager" value="manager" class="rounded border-slate-300 text-brandBlue focus:ring-brandBlue">
+              <span>Manager / HR Analytics Access</span>
+            </label>
+            <label class="flex items-center space-x-2 text-xs font-medium text-slate-700">
+              <input type="checkbox" id="role-cb-developer" value="developer" class="rounded border-slate-300 text-brandBlue focus:ring-brandBlue">
+              <span>Developer / User Management Access</span>
+            </label>
+          </div>
+        </div>
+        
+        <div id="user-modal-error" class="hidden text-xs font-medium text-red-500 bg-red-50 border border-red-100 p-3 rounded-xl"></div>
+
+        <div class="flex space-x-3 pt-3">
+          <button onclick="closeUserModal()" class="w-1/2 py-2.5 text-slate-500 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-50 transition">
+            Cancel
+          </button>
+          <button onclick="submitUserForm()" class="w-1/2 py-2.5 text-white brand-gradient brand-gradient-hover rounded-xl text-xs font-semibold shadow-md transition">
+            Save User
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FRONTEND CONTROLLER JAVASCRIPT ==================== -->
+  <script>
+    // State management
+    const state = {
+      configUrl: 'https://script.google.com/macros/s/AKfycbzdN_JoCmrwDbM_9Bi7XU84kKIdGz2sMCK8gDIPev4jR58WDZvn0PddRDIkZ13LNQQW0w/exec',
+      currentUser: null,  // { username, role }
+      currentView: 'login', // login, config, role-select, employee, manager, developer
+      attendance: {
+        is_logged_in: false,
+        login_time: null,
+        logout_time: null,
+        total_hours: 0
+      },
+      tasks: [], // all active employee tasks
+      managerData: {
+        time_logs: [],
+        tasks: [],
+        summaries: [],
+        leaves: []
+      },
+      devUsers: [],
+      selectedMgrKanbanEmployee: '',
+      timerInterval: null,
+      mgrAttendanceSortOrder: 'desc',
+      mgrSummariesSortOrder: 'desc',
+      unsavedLeaveChanges: {},
+      unsavedTaskChanges: {}
+    };
+
+    function getLocalDateString() {
+      const d = new Date();
+      let month = "" + (d.getMonth() + 1);
+      let day = "" + d.getDate();
+      const year = d.getFullYear();
+      if (month.length < 2) month = "0" + month;
+      if (day.length < 2) day = "0" + day;
+      return [year, month, day].join("-");
+    }
+
+    function getLocalTimeString() {
+      const d = new Date();
+      let hours = "" + d.getHours();
+      let minutes = "" + d.getMinutes();
+      let seconds = "" + d.getSeconds();
+      if (hours.length < 2) hours = "0" + hours;
+      if (minutes.length < 2) minutes = "0" + minutes;
+      if (seconds.length < 2) seconds = "0" + seconds;
+      return [hours, minutes, seconds].join(":");
+    }
+
+    // Vector Brand Logo (SVG extracted color parameters)
+    const PERIFERRY_SVG_LOGO = `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-auto" viewBox="0 0 1077.114 353.161" style="max-height: 100%;">
+        <title>PF_MAIN_LOGO_FULLCOLOR</title>
+        <!-- Letter paths with primary Brand blue -->
+        <path d="M6903.477,7268.538a8.605,8.605,0,0,1-8.606-8.6V7004.705a8.606,8.606,0,1,1,17.211,0v255.228A8.6,8.6,0,0,1,6903.477,7268.538Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M6940.746,7136.322a189.932,189.932,0,0,1-33.351-2.871,8.605,8.605,0,0,1,3.288-16.893c.817.154,56.18,10.459,85.421-11.69,10.517-7.967,16.233-19.053,17.475-33.893,1.5-17.886-2.89-31.326-13.41-41.089-28.443-26.4-91-16.783-91.629-16.683a8.605,8.605,0,1,1-2.709-17c2.9-.463,71.528-10.97,106.046,21.064,14.449,13.409,20.791,31.961,18.852,55.139-1.651,19.728-9.817,35.275-24.274,46.207C6987.568,7132.9,6961.438,7136.322,6940.746,7136.322Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7028.387,7268.539q-1.113,0-2.258-.029c-34.314-.892-45.612-35.088-46.827-53.262a61.878,61.878,0,0,1-.209-9.233c0-.2.014-.407.031-.607a68.619,68.619,0,0,1,3.311-17.818c4.571-13.711,15.832-31.288,43.523-37.162,15.546-3.3,28.85-1.02,39.544,6.772,18.829,13.718,21.683,39.541,21.795,40.634a8.6,8.6,0,0,1-7.859,9.456l-79.936,6.534a2.937,2.937,0,0,0-2.667,3.359c1.319,9.024,6.994,33.53,29.741,34.122,28.14.76,33.96-16.358,34.195-17.085l-.037.123,13.464,3.883a2.929,2.929,0,0,1,1.873,4.008C7072.639,7249.842,7060.9,7268.539,7028.387,7268.539Zm10.771-102.37a46.539,46.539,0,0,0-9.629,1.1c-15.63,3.315-25.922,11.809-30.588,25.245h0a2.906,2.906,0,0,0,2.982,3.849l62.5-5.108a2.931,2.931,0,0,0,2.511-3.965c-2.2-5.649-5.818-12.013-11.64-16.225A26.683,26.683,0,0,0,7039.158,7166.169Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7312.246,7268.539c-.742,0-1.493-.01-2.258-.029-34.314-.892-45.612-35.088-46.827-53.262a61.736,61.736,0,0,1-.21-9.216c0-.216.014-.429.033-.641a68.583,68.583,0,0,1,3.31-17.8c4.571-13.711,15.832-31.288,43.522-37.162,15.548-3.3,28.851-1.02,39.545,6.772,18.828,13.718,21.684,39.541,21.8,40.634a8.6,8.6,0,0,1-7.859,9.456l-80.333,6.566a2.559,2.559,0,0,0-2.333,2.9c1.2,8.649,6.687,33.948,29.8,34.549,28.133.76,33.96-16.358,34.194-17.085l-.037.123,13.875,4a2.563,2.563,0,0,1,1.637,3.495C7356.907,7249.173,7345.33,7268.539,7312.246,7268.539Zm10.771-102.37a46.507,46.507,0,0,0-9.628,1.1c-15.836,3.359-26.187,12.028-30.767,25.769l-.012.037a2.557,2.557,0,0,0,2.652,3.33l63.519-5.191a2.563,2.563,0,0,0,2.2-3.457c-2.187-5.763-5.837-12.364-11.82-16.692A26.683,26.683,0,0,0,7323.017,7166.169Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7109.148,7268.538a8.6,8.6,0,0,1-8.605-8.6V7150.27a8.606,8.606,0,1,1,17.211,0v109.663A8.605,8.605,0,0,1,7109.148,7268.538Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7109.4,7227.484a8.612,8.612,0,0,1-8.4-10.494c1.406-6.248,14.68-61.239,47.248-67.844a8.605,8.605,0,1,1,3.42,16.867c-18.375,3.727-30.93,41.74-33.879,54.762A8.612,8.612,0,0,1,7109.4,7227.484Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7392.1,7268.538a8.7,8.7,0,0,1-8.606-8.795V7150.46a8.608,8.608,0,1,1,17.211,0v109.283A8.7,8.7,0,0,1,7392.1,7268.538Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7392.348,7230.226a8.617,8.617,0,0,1-8.4-10.495c1.408-6.249,14.682-61.239,47.249-67.844a8.605,8.605,0,1,1,3.42,16.867c-18.374,3.726-30.929,41.74-33.88,54.763A8.612,8.612,0,0,1,7392.348,7230.226Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7463.285,7268.86a8.7,8.7,0,0,1-8.6-8.8V7150.459a8.608,8.608,0,1,1,17.211,0v109.606A8.7,8.7,0,0,1,7463.285,7268.86Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7463.537,7230.226a8.617,8.617,0,0,1-8.4-10.495c1.407-6.249,14.681-61.239,47.249-67.844a8.605,8.605,0,0,1,3.42,16.867c-18.374,3.726-30.93,41.74-33.88,54.763A8.612,8.612,0,0,1,7463.537,7230.226Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7182.322,7268.538a8.515,8.515,0,0,1-8.606-8.421V7150.085a8.608,8.608,0,0,1,17.211,0v110.032A8.515,8.515,0,0,1,7182.322,7268.538Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7239.283,7268.538a8.6,8.6,0,0,1-8.605-8.6V7013.281a8.605,8.605,0,0,1,8.605-8.606h85.53a8.606,8.606,0,1,1,0,17.211h-76.924v238.047A8.605,8.605,0,0,1,7239.283,7268.538Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7308.356,7125.5h-63.974a8.606,8.606,0,1,1,0-17.211h63.974a8.606,8.606,0,1,1,0,17.211Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7542.26,7268.775a8.624,8.624,0,0,1-3.493-.739,8.51,8.51,0,0,1-4.365-11.269l46.359-103.346a8.63,8.63,0,0,1,11.36-4.329,8.509,8.509,0,0,1,4.364,11.27l-46.358,103.345A8.612,8.612,0,0,1,7542.26,7268.775Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7562.436,7217.362a8.607,8.607,0,0,1-8.531-7.559h0c-1.823-14.8-8.546-38.2-17.183-41.42a8.605,8.605,0,1,1,6.017-16.124c21.432,8,27.292,47.6,28.249,55.456a8.6,8.6,0,0,1-7.5,9.583A8.7,8.7,0,0,1,7562.436,7217.362Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <path d="M7454.955,7347.356q-.72,0-1.456-.016c-17.357-.4-27.145-7.542-35.008-13.286-7.138-5.213-12.3-8.981-23.2-9.033h-.206c-10.212,0-15.468,3.741-22.724,8.9-8.223,5.853-18.449,13.129-36.073,13.13h-.343c-17.7-.1-27.359-7.491-35.124-13.433-6.472-4.954-11.149-8.533-20.646-8.7-13.106-.23-19.978,4.1-28.653,9.594-9.612,6.084-20.523,12.97-39.125,12.48-17.908-.479-28.307-7.648-36.662-13.408-7.6-5.238-13.082-8.994-23.994-8.78-11.059.247-16.783,4.1-24.03,8.988-8.087,5.45-18.152,12.232-35.338,12.565-18.113.319-28.968-6.738-37.682-12.434-7.84-5.124-14.032-9.171-25.629-9.224h-.223c-11.372,0-17.457,3.97-25.149,8.988-8.651,5.641-19.416,12.664-37.618,12.673h-.037c-18.136,0-28.846-6.992-37.454-12.612-7.774-5.074-13.913-9.083-25.633-9.158-11.648-.1-17.925,4.166-25.841,9.537-8.876,6.022-19.915,13.537-38.451,12.863-17.833-.628-28.181-8.168-36.495-14.226-7.384-5.38-12.266-8.932-21.728-8.307-9.094.6-14.73,4.635-21.866,9.739-8.552,6.118-18.21,13.038-33.744,12.8-21.689-.351-38.2-16.095-48.063-25.5l-.144-.137a11,11,0,1,1,15.182-15.921l.144.136c8.023,7.652,20.149,19.213,33.238,19.426,8.255.121,13.422-3.57,20.588-8.7,7.96-5.694,17.867-12.78,33.21-13.8,17.424-1.159,27.8,6.4,36.138,12.477,7.384,5.38,13.216,9.63,24.315,10.021,11.34.4,17.21-3.577,25.324-9.083,8.833-5.991,19.87-13.431,38.334-13.331,18.189.117,28.907,7.114,37.519,12.736,7.73,5.047,13.837,9.034,25.425,9.034h.027c11.668-.006,17.821-4.019,25.611-9.1,8.634-5.632,19.368-12.612,37.491-12.559,18.1.082,28.891,7.139,37.565,12.809,7.755,5.069,13.888,9.071,25.22,8.853,10.7-.207,16.334-4.005,23.47-8.813,8.163-5.5,18.323-12.348,35.833-12.738,18.032-.4,28.53,6.841,36.972,12.662,7.476,5.153,13.38,9.223,24.763,9.528,11.937.321,18.476-3.828,26.77-9.077,9.4-5.95,21.06-13.378,40.816-13,16.729.3,26.1,7.47,33.622,13.229,6.711,5.137,11.561,8.849,21.87,8.9h.237c10.585,0,15.929-3.8,23.305-9.054,8.13-5.787,18.239-12.981,35.489-12.981h.305c18.027.087,28.033,7.4,36.073,13.267,7.011,5.12,12.075,8.82,22.532,9.058,11.789.263,18.668-4.572,26.627-10.175,6.744-4.748,14.388-10.13,24.83-11.7a60.679,60.679,0,0,1,15.213-.287c16.324,1.625,25.434,8.1,32.753,13.309,6.381,4.539,10.991,7.819,20.337,8.163,10.771.39,16.441-3.409,24.309-8.676,8.488-5.68,19.046-12.749,36.388-12.749h.107c17.027.029,28.359,7.268,37.464,13.084,8.294,5.3,14.838,9.485,25.027,8.985,13.938-.685,26.331-12.529,34.532-20.368l.13-.124a11,11,0,1,1,15.2,15.9l-.131.124c-9.92,9.481-26.523,25.351-48.652,26.436-17.2.842-28.219-6.2-37.95-12.417-8.069-5.154-15.038-9.606-25.658-9.624h-.072c-10.657,0-16.612,3.987-24.148,9.032-8.678,5.808-19.516,13.036-37.358,12.378-15.923-.587-24.612-6.767-32.278-12.22-6.519-4.637-11.668-8.3-22.179-9.345a38.931,38.931,0,0,0-9.762.151c-5.3.8-9.775,3.946-15.438,7.934C7484.282,7339.5,7473.128,7347.356,7454.955,7347.356Z" transform="translate(-6673.202 -6994.195)" fill="#1f3c7e"/>
+        <!-- Accent circles (pink and violet) -->
+        <path d="M7182.322,7127.416a18.479,18.479,0,1,1,18.478-18.478A18.5,18.5,0,0,1,7182.322,7127.416Z" transform="translate(-6673.202 -6994.195)" fill="#c8469e"/>
+        <path d="M6838.321,7000.921l34.251,271.2a7.009,7.009,0,0,1-7.007,7.887l-163.158-1.246a7.008,7.008,0,0,1-6.271-10.028l128.908-269.959A7.008,7.008,0,0,1,6838.321,7000.921Z" transform="translate(-6673.202 -6994.195)" fill="#5046b6"/>
+        <path d="M7621.537,7081.769,7597.5,7271.616a7.408,7.408,0,0,0,7.338,8.428l107.676-1.505a7.274,7.274,0,0,0,6.309-10.44l-88.525-187.78A4.6,4.6,0,0,0,7621.537,7081.769Z" transform="translate(-6673.202 -6994.195)" fill="#5046b6"/>
+      </svg>
+    `;
+
+    // Initialize date and time updates
+    // HELPER: Extract HH:MM:SS from date or time strings safely
+    function extractTimeOnly(timeStr) {
+      if (!timeStr) return "00:00:00";
+      const str = timeStr.toString().trim();
+      const match = str.match(/\d{2}:\d{2}:\d{2}/);
+      if (match) return match[0];
+      return str;
+    }
+
+    // Initialize date and time updates
+    function updateClock() {
+      const now = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('header-date').innerText = now.toLocaleDateString('en-US', options);
+      document.getElementById('header-time').innerText = now.toLocaleTimeString('en-US');
+      
+      // Update session timer if logged in
+      if (state.currentUser && state.attendance && state.attendance.is_logged_in && state.attendance.login_time) {
+        try {
+          const timeStr = extractTimeOnly(state.attendance.login_time);
+          const loginParts = timeStr.split(':');
+          const loginDate = new Date();
+          loginDate.setHours(parseInt(loginParts[0]) || 0, parseInt(loginParts[1]) || 0, parseInt(loginParts[2]) || 0);
+          
+          let diffMs = now - loginDate;
+          if (diffMs < 0) diffMs = 0;
+          
+          const diffSecs = Math.floor(diffMs / 1000);
+          const hrs = Math.floor(diffSecs / 3600);
+          const mins = Math.floor((diffSecs % 3600) / 60);
+          const secs = diffSecs % 60;
+          
+          const pad = (n) => n.toString().padStart(2, '0');
+          document.getElementById('session-duration').innerText = `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+        } catch (e) {
+          console.error("Timer error:", e);
+        }
+      }
+    }
+
+    // Call Python backend wrapper safely
+    async function callPython(method, arg = null) {
+      if (window.pywebview && window.pywebview.api && window.pywebview.api[method]) {
+        try {
+          const res = await window.pywebview.api[method](arg);
+          return typeof res === 'string' ? JSON.parse(res) : res;
+        } catch (e) {
+          console.error("Error calling Python method:", method, e);
+          return { success: false, error: e.message || e.toString() };
+        }
+      } else {
+        console.warn(`pywebview.${method} not available, using mock behavior`);
+        // Mock responses for web testing
+        return mockPythonBackend(method, arg);
+      }
+    }
+
+    // Loader visibility toggler with simple clean status
+    function toggleLoader(show) {
+      const loader = document.getElementById('modal-loading');
+      if (show) {
+        loader.classList.remove('hidden');
+      } else {
+        loader.classList.add('hidden');
+      }
+    }
+
+    // App Navigation router
+    function showView(viewName) {
+      state.currentView = viewName;
+      
+      // Hide all screens
+      ['screen-config', 'screen-login', 'screen-role-select', 'screen-employee', 'screen-manager', 'screen-developer'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      
+      // Header visibility
+      const header = document.getElementById('app-header');
+      if (viewName === 'login' || viewName === 'config' || viewName === 'role-select') {
+        header.classList.add('hidden');
+      } else {
+        header.classList.remove('hidden');
+        // Populate header details
+        document.getElementById('header-username').innerText = state.currentUser ? state.currentUser.username : 'Guest';
+        
+        let displayRole = 'Employee';
+        if (viewName === 'manager') displayRole = 'Manager/HR';
+        if (viewName === 'developer') displayRole = 'Developer/Admin';
+        document.getElementById('header-role').innerText = displayRole;
+        
+        document.getElementById('user-avatar-initial').innerText = state.currentUser ? state.currentUser.username.charAt(0).toUpperCase() : '-';
+        
+        // Show status badge
+        const badge = document.getElementById('header-status-badge');
+        if (state.attendance && state.attendance.is_logged_in) {
+          badge.className = "flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-green-50 text-green-600 border border-green-100";
+          badge.innerHTML = `<span class="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>Active Log-in`;
+        } else {
+          badge.className = "flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100";
+          badge.innerHTML = `<span class="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse"></span>Logged Out`;
+        }
+      }
+      
+      // Show requested screen with smooth fade-in
+      const activeScreen = document.getElementById('screen-' + viewName);
+      activeScreen.classList.remove('hidden', 'fade-in');
+      void activeScreen.offsetWidth; // Reflow trigger
+      activeScreen.classList.add('fade-in');
+    }
+
+    // ==================== CONFIGURATION VIEW CONTROLLER ====================
+    async function checkLocalConfig() {
+      // Preset URL and bypass database connection screen completely
+      state.configUrl = 'https://script.google.com/macros/s/AKfycbzdN_JoCmrwDbM_9Bi7XU84kKIdGz2sMCK8gDIPev4jR58WDZvn0PddRDIkZ13LNQQW0w/exec';
+      showView('login');
+    }
+
+    async function saveConfiguration() {
+      const url = document.getElementById('config-url').value.trim();
+      if (!url) {
+        alert("Please enter a valid Google Apps Script Web App URL");
+        return;
+      }
+      
+      toggleLoader(true);
+      const res = await callPython('save_config', url);
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        state.configUrl = url;
+        showView('login');
+      } else {
+        alert("Error saving configuration: " + (res.error || "Unknown error"));
+      }
+    }
+
+    function editConfigUrl() {
+      document.getElementById('config-url').value = state.configUrl;
+      showView('config');
+    }
+
+    // ==================== LOGIN VIEW CONTROLLER ====================
+    async function attemptLogin() {
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errorDiv = document.getElementById('login-error');
+      
+      errorDiv.classList.add('hidden');
+      if (!username || !password) {
+        errorDiv.innerText = "Please enter both username and password.";
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+      
+      toggleLoader(true);
+      // Make standard login API request via Python proxy
+      const res = await callPython('api_request', {
+        action: 'login',
+        username: username,
+        password: password
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        state.currentUser = res.user;
+        state.attendance = res.attendance;
+        
+        // Update local session storage
+        localStorage.setItem('pf_session', JSON.stringify({
+          user: res.user,
+          attendance: res.attendance
+        }));
+        
+        // Determine role selection
+        handlePostLoginNavigation();
+      } else {
+        errorDiv.innerText = res.error || "Login failed. Please check your credentials.";
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+    function handlePostLoginNavigation() {
+      const roles = state.currentUser.role.split(',').map(r => r.trim().toLowerCase());
+      
+      // Reset dashboard back buttons to prevent unauthorized dashboard navigation
+      document.getElementById('btn-back-to-portal-sel').classList.add('hidden');
+      document.getElementById('btn-back-to-mgr-sel').classList.add('hidden');
+      document.getElementById('btn-back-to-dev-sel').classList.add('hidden');
+      
+      // Reset unsaved changes on login
+      state.unsavedLeaveChanges = {};
+      state.unsavedTaskChanges = {};
+      
+      // Clear previous user's role cards from the DOM to prevent session leakage
+      document.getElementById('role-options-grid').innerHTML = '';
+      
+      // Update check in buttons based on login status
+      updateAttendanceUI();
+      
+      // If the user has more than 1 role access, show role selection dashboard
+      if (roles.length > 1) {
+        renderRoleSelectionOptions(roles);
+        showView('role-select');
+      } else {
+        // Switch to the single available view
+        const singleRole = roles[0];
+        if (singleRole === 'manager') {
+          loadManagerData();
+          showView('manager');
+        } else if (singleRole === 'developer') {
+          loadDeveloperData();
+          showView('developer');
+        } else {
+          loadEmployeeData();
+          showView('employee');
+        }
+      }
+    }
+
+    function renderRoleSelectionOptions(roles) {
+      document.getElementById('role-select-name').innerText = state.currentUser.username;
+      const grid = document.getElementById('role-options-grid');
+      grid.innerHTML = '';
+      
+      const roleCards = {
+        employee: {
+          title: "Employee Portal",
+          desc: "Plan your day, log attendance, and manage your Kanban task board.",
+          btnText: "Open Portal",
+          color: "brandBlue",
+          gradient: "from-blue-50 to-indigo-50/30",
+          border: "border-brandBlue/10",
+          action: () => {
+            loadEmployeeData();
+            showView('employee');
+            // If they are manager/dev but entered employee portal, allow backing out
+            document.getElementById('btn-back-to-portal-sel').classList.remove('hidden');
+          }
+        },
+        manager: {
+          title: "Manager / HR",
+          desc: "View working hours, summaries, and employee Kanban boards.",
+          btnText: "Open Analytics",
+          color: "brandPurple",
+          gradient: "from-purple-50 to-indigo-50/20",
+          border: "border-brandPurple/10",
+          action: () => {
+            loadManagerData();
+            showView('manager');
+            document.getElementById('btn-back-to-mgr-sel').classList.remove('hidden');
+          }
+        },
+        developer: {
+          title: "Developer / Admin",
+          desc: "Modify employee lists, edit passwords, and system configuration.",
+          btnText: "Open Control Panel",
+          color: "brandPink",
+          gradient: "from-pink-50 to-rose-50/10",
+          border: "border-brandPink/10",
+          action: () => {
+            loadDeveloperData();
+            showView('developer');
+            document.getElementById('btn-back-to-dev-sel').classList.remove('hidden');
+          }
+        }
+      };
+      
+      roles.forEach(role => {
+        const cardInfo = roleCards[role];
+        if (!cardInfo) return;
+        
+        const card = document.createElement('div');
+        card.className = `bg-white border ${cardInfo.border} p-6 rounded-2xl flex flex-col justify-between custom-shadow hover:shadow-md transition duration-200`;
+        card.innerHTML = `
+          <div>
+            <div class="h-10 w-10 mb-4 rounded-xl flex items-center justify-center bg-slate-50 text-slate-700">
+              ${role === 'employee' ? `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-brandBlue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              ` : role === 'manager' ? `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-brandPurple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+                </svg>
+              ` : `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-brandPink" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+              `}
+            </div>
+            <h4 class="font-bold text-slate-800 text-sm mb-1.5">${cardInfo.title}</h4>
+            <p class="text-xs text-slate-500 mb-6 leading-relaxed">${cardInfo.desc}</p>
+          </div>
+          <button class="w-full py-2.5 rounded-xl font-semibold text-xs border border-slate-200 hover:bg-slate-50 text-slate-700 transition" id="btn-select-${role}">
+            ${cardInfo.btnText}
+          </button>
+        `;
+        
+        grid.appendChild(card);
+        
+        // Add event listener
+        document.getElementById(`btn-select-${role}`).addEventListener('click', cardInfo.action);
+      });
+    }
+
+    function backToDashboardSelection() {
+      const roles = state.currentUser.role.split(',').map(r => r.trim().toLowerCase());
+      if (roles.length <= 1) {
+        // If they only have one role, they shouldn't even be here. Send them back to their dashboard.
+        handlePostLoginNavigation();
+        return;
+      }
+      
+      // Clear timers and custom navigation flags
+      document.getElementById('btn-back-to-portal-sel').classList.add('hidden');
+      document.getElementById('btn-back-to-mgr-sel').classList.add('hidden');
+      document.getElementById('btn-back-to-dev-sel').classList.add('hidden');
+      
+      // Re-render role options to be 100% correct
+      renderRoleSelectionOptions(roles);
+      showView('role-select');
+    }
+
+    function logoutAccount() {
+      // Clear memory
+      localStorage.removeItem('pf_session');
+      state.currentUser = null;
+      state.tasks = [];
+      state.managerData = {
+        time_logs: [],
+        tasks: [],
+        summaries: []
+      };
+      state.devUsers = [];
+      state.selectedMgrKanbanEmployee = '';
+      
+      // Stop timer
+      if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+      }
+      
+      document.getElementById('login-username').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error').classList.add('hidden');
+      
+      // Clear DOM state to prevent security leak
+      document.getElementById('role-options-grid').innerHTML = '';
+      document.getElementById('btn-back-to-portal-sel').classList.add('hidden');
+      document.getElementById('btn-back-to-mgr-sel').classList.add('hidden');
+      document.getElementById('btn-back-to-dev-sel').classList.add('hidden');
+      
+      // Reset unsaved changes on logout
+      state.unsavedLeaveChanges = {};
+      state.unsavedTaskChanges = {};
+      updateSyncButtonState();
+      updateLeavesSaveButtonState();
+      
+      showView('login');
+    }
+
+    // ==================== EMPLOYEE PORTAL CONTROLLER ====================
+    async function loadEmployeeData() {
+      document.querySelectorAll('.employee-name').forEach(el => el.innerText = state.currentUser.username);
+      
+      // If checked out, clear tasks board locally
+      if (!state.attendance || !state.attendance.is_logged_in) {
+        state.tasks = [];
+        renderKanbanBoard();
+        document.getElementById('daily-summary-text').value = '';
+        return;
+      }
+      
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'get_user_tasks',
+        username: state.currentUser.username
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        state.tasks = res.tasks || [];
+        document.getElementById('daily-summary-text').value = res.today_summary || '';
+        
+        // Render Kanban Board
+        renderKanbanBoard();
+      } else {
+        console.error("Error loading tasks:", res.error);
+      }
+    }
+
+    // Update Attendance checkin checkout buttons
+    function updateAttendanceUI() {
+      const btnCheckIn = document.getElementById('btn-checkin');
+      const btnCheckOut = document.getElementById('btn-checkout');
+      const timerSec = document.getElementById('attendance-session-timer');
+      
+      if (state.attendance && state.attendance.is_logged_in) {
+        btnCheckIn.classList.add('hidden');
+        btnCheckOut.classList.remove('hidden');
+        timerSec.classList.remove('hidden');
+        
+        // Ensure timer is ticking
+        if (!state.timerInterval) {
+          state.timerInterval = setInterval(updateClock, 1000);
+        }
+      } else {
+        btnCheckIn.classList.remove('hidden');
+        btnCheckOut.classList.add('hidden');
+        timerSec.classList.add('hidden');
+        document.getElementById('session-duration').innerText = '00:00:00';
+      }
+    }
+
+    async function toggleAttendance(type) {
+      if (type === 'logout') {
+        const summaryTextarea = document.getElementById('daily-summary-text');
+        let textVal = summaryTextarea ? summaryTextarea.value.trim() : '';
+        if (!textVal) {
+          // Auto generate summary
+          generateAutoSummary();
+          textVal = summaryTextarea ? summaryTextarea.value.trim() : '';
+        }
+        
+        if (textVal) {
+          // Save summary automatically
+          toggleLoader(true);
+          await callPython('api_request', {
+            action: 'save_summary',
+            username: state.currentUser.username,
+            summary: textVal
+          });
+          toggleLoader(false);
+        }
+      }
+      
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'log_time',
+        username: state.currentUser.username,
+        type: type
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        state.attendance = res.attendance;
+        
+        // Update session storage
+        const session = JSON.parse(localStorage.getItem('pf_session') || '{}');
+        session.attendance = res.attendance;
+        localStorage.setItem('pf_session', JSON.stringify(session));
+        
+        if (type === 'logout') {
+          // Clear tasks on checkout
+          state.tasks = [];
+          renderKanbanBoard();
+          document.getElementById('daily-summary-text').value = '';
+        }
+        
+        updateAttendanceUI();
+        
+        // Refresh status badges and headers
+        const viewToReload = state.currentView;
+        showView(viewToReload);
+        
+        if (type === 'login') {
+          // Scroll employee to task planning card and highlight it
+          document.getElementById('plan-day-section').scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        alert("Attendance Log Error: " + (res.error || "Cannot complete log-in/out session"));
+      }
+    }
+
+    // TASK PLANING INPUT BUILDER
+    let taskInputCount = 1;
+    function addTaskInput(value = "") {
+      taskInputCount++;
+      const container = document.getElementById('task-inputs');
+      const div = document.createElement('div');
+      div.className = "flex items-center space-x-2";
+      div.innerHTML = `
+        <input type="text" class="task-input-item w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent transition" placeholder="e.g. Sub-task detail descriptor" value="${value}">
+        <button onclick="removeTaskInput(this)" class="p-2 text-slate-400 hover:text-red-500 rounded-xl transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+        </button>
+      `;
+      container.appendChild(div);
+    }
+
+    function removeTaskInput(btn) {
+      const parentRow = btn.parentElement;
+      const container = document.getElementById('task-inputs');
+      // Keep at least one input field
+      if (container.children.length > 1) {
+        parentRow.remove();
+      } else {
+        parentRow.querySelector('input').value = '';
+      }
+    }
+
+    async function submitDayPlan() {
+      const inputs = document.querySelectorAll('.task-input-item');
+      const titles = [];
+      inputs.forEach(inp => {
+        const val = inp.value.trim();
+        if (val) titles.push(val);
+      });
+      
+      if (titles.length === 0) {
+        alert("Please write down at least one task before submitting your plan.");
+        return;
+      }
+      
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'add_tasks',
+        username: state.currentUser.username,
+        tasks: titles
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        // Concat new tasks to local state
+        state.tasks = state.tasks.concat(res.added);
+        renderKanbanBoard();
+        
+        // Reset planner inputs to a single blank row
+        const container = document.getElementById('task-inputs');
+        container.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <input type="text" class="task-input-item w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent transition" placeholder="e.g. Design the client mockup dashboard">
+            <button onclick="removeTaskInput(this)" class="p-2 text-slate-400 hover:text-red-500 rounded-xl transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
+          </div>
+        `;
+        taskInputCount = 1;
+      } else {
+        alert("Error saving day plan: " + (res.error || "Unknown error"));
+      }
+    }
+
+    // KANBAN UI RENDERING
+    function renderKanbanBoard() {
+      const colTodo = document.getElementById('col-todo');
+      const colInprogress = document.getElementById('col-inprogress');
+      const colCompleted = document.getElementById('col-completed');
+      
+      colTodo.innerHTML = '';
+      colInprogress.innerHTML = '';
+      colCompleted.innerHTML = '';
+      
+      let countTodo = 0;
+      let countInprogress = 0;
+      let countCompleted = 0;
+      
+      state.tasks.forEach(task => {
+        const card = document.createElement('div');
+        card.className = "bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover-lift transition duration-200 flex flex-col justify-between space-y-3 fade-in";
+        
+        let actionButtons = '';
+        if (task.status === 'todo') {
+          countTodo++;
+          actionButtons = `
+            <button onclick="moveTask('${task.task_id}', 'inprogress')" class="w-full py-1.5 bg-brandPurple/5 hover:bg-brandPurple/10 text-brandPurple text-xs font-bold rounded-lg border border-brandPurple/10 transition flex items-center justify-center">
+              Start Work
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 ml-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+            </button>
+          `;
+          colTodo.appendChild(card);
+        } else if (task.status === 'inprogress') {
+          countInprogress++;
+          actionButtons = `
+            <div class="flex space-x-2 w-full">
+              <button onclick="moveTask('${task.task_id}', 'todo')" class="w-1/2 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-500 text-xs font-semibold rounded-lg border border-slate-200 transition">
+                Move Back
+              </button>
+              <button onclick="moveTask('${task.task_id}', 'completed')" class="w-1/2 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg border border-green-600 transition flex items-center justify-center">
+                Complete
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+              </button>
+            </div>
+          `;
+          colInprogress.appendChild(card);
+        } else if (task.status === 'completed') {
+          countCompleted++;
+          actionButtons = `
+            <button onclick="moveTask('${task.task_id}', 'inprogress')" class="w-full py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-medium rounded-lg border border-slate-200 transition">
+              Re-open Task
+            </button>
+          `;
+          colCompleted.appendChild(card);
+        }
+        
+        card.innerHTML = `
+          <div class="text-xs font-semibold text-slate-800 leading-relaxed">${task.title}</div>
+          <div class="flex items-center justify-between text-[10px] text-slate-400">
+            <span>Created today</span>
+            <span>ID: ...${task.task_id.substring(0, 4)}</span>
+          </div>
+          <div class="pt-2 border-t border-slate-50">
+            ${actionButtons}
+          </div>
+        `;
+      });
+      
+      // Update counters
+      document.getElementById('count-todo').innerText = countTodo;
+      document.getElementById('count-inprogress').innerText = countInprogress;
+      document.getElementById('count-completed').innerText = countCompleted;
+    }
+
+    function moveTask(taskId, newStatus) {
+      const taskIdx = state.tasks.findIndex(t => t.task_id === taskId);
+      if (taskIdx !== -1) {
+        state.tasks[taskIdx].status = newStatus;
+        state.unsavedTaskChanges[taskId] = newStatus;
+        renderKanbanBoard();
+        updateSyncButtonState();
+      }
+    }
+
+    function updateSyncButtonState() {
+      const keys = Object.keys(state.unsavedTaskChanges);
+      const btn = document.getElementById('btn-sync-kanban');
+      const countEl = document.getElementById('unsaved-task-count');
+      
+      if (keys.length > 0) {
+        btn.classList.remove('hidden');
+        countEl.innerText = keys.length;
+      } else {
+        btn.classList.add('hidden');
+      }
+    }
+
+    async function syncKanbanBoard() {
+      const keys = Object.keys(state.unsavedTaskChanges);
+      if (keys.length === 0) return;
+      
+      const updates = keys.map(tid => {
+        return { task_id: tid, status: state.unsavedTaskChanges[tid] };
+      });
+      
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'update_tasks_bulk',
+        updates: updates
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        state.unsavedTaskChanges = {};
+        updateSyncButtonState();
+        alert("Task board changes synced successfully!");
+      } else {
+        alert("Error syncing tasks: " + (res.error || "Server issue"));
+      }
+    }
+
+    // DAILY SUMMARY AUTO-BUILDER
+    function generateAutoSummary() {
+      const completedTasks = state.tasks.filter(t => t.status === 'completed');
+      const inprogressTasks = state.tasks.filter(t => t.status === 'inprogress');
+      const todoTasks = state.tasks.filter(t => t.status === 'todo');
+      
+      let text = `Daily Summary - ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n`;
+      
+      if (completedTasks.length > 0) {
+        text += `✅ Completed Tasks:\n`;
+        completedTasks.forEach((t, i) => text += `${i+1}. ${t.title}\n`);
+        text += `\n`;
+      }
+      
+      if (inprogressTasks.length > 0) {
+        text += `⏳ In Progress Tasks:\n`;
+        inprogressTasks.forEach((t, i) => text += `${i+1}. ${t.title}\n`);
+        text += `\n`;
+      }
+      
+      if (todoTasks.length > 0) {
+        text += `📋 Remaining Tasks (Pending):\n`;
+        todoTasks.forEach((t, i) => text += `${i+1}. ${t.title}\n`);
+      }
+      
+      if (completedTasks.length === 0 && inprogressTasks.length === 0 && todoTasks.length === 0) {
+        text += "No tasks planned or logged for today.";
+      }
+      
+      document.getElementById('daily-summary-text').value = text;
+    }
+
+    async function submitDailySummary() {
+      const text = document.getElementById('daily-summary-text').value.trim();
+      if (!text) {
+        alert("Daily summary text cannot be blank.");
+        return;
+      }
+      
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'save_summary',
+        username: state.currentUser.username,
+        summary: text
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        alert("Daily Work Summary submitted successfully! It has been logged for your HR manager.");
+      } else {
+        alert("Failed to submit summary: " + (res.error || "Network error"));
+      }
+    }
+
+    // ==================== HR / MANAGER DASHBOARD CONTROLLER ====================
+    let hoursChartInstance = null;
+    
+    async function loadManagerData(forceRefresh = false) {
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'get_manager_data'
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        state.managerData = {
+          time_logs: res.time_logs || [],
+          tasks: res.tasks || [],
+          summaries: res.summaries || [],
+          leaves: res.leaves || []
+        };
+        
+        document.getElementById('mgr-last-update').innerText = new Date().toLocaleTimeString();
+        renderManagerDashboard();
+      } else {
+        alert("Error retrieving HR data: " + (res.error || "Unknown error"));
+      }
+    }
+
+    function renderManagerDashboard() {
+      renderAttendanceStats();
+      renderWeeklyHoursChart();
+      switchMgrTab('attendance'); // Default to attendance tab
+      populateEmployeeSelector();
+    }
+
+    function renderAttendanceStats() {
+      const logs = state.managerData.time_logs;
+      const today = getLocalDateString();
+      
+      // Filter today's attendance logs
+      const todayLogs = logs.filter(l => l.date === today);
+      
+      // Checked in: logout_time is empty
+      const activeCount = todayLogs.filter(l => l.logout_time === '').length;
+      const completeCount = todayLogs.filter(l => l.logout_time !== '').length;
+      
+      // Calculate total unique employees in sheets
+      const uniqueEmployees = [...new Set(logs.map(l => l.username.toLowerCase()))];
+      
+      document.getElementById('stat-active-count').innerText = activeCount;
+      document.getElementById('stat-logged-out-count').innerText = completeCount;
+      document.getElementById('stat-total-count').innerText = Math.max(uniqueEmployees.length, 6); // default to at least 6 default users
+    }
+
+    function renderWeeklyHoursChart() {
+      const logs = state.managerData.time_logs;
+      
+      // Let's summarize the total working hours per employee over the last 7 days
+      const employeeHours = {};
+      logs.forEach(l => {
+        const user = l.username;
+        const hrs = parseFloat(l.total_hours) || 0;
+        if (!employeeHours[user]) {
+          employeeHours[user] = 0;
+        }
+        employeeHours[user] += hrs;
+      });
+      
+      const labels = Object.keys(employeeHours);
+      const data = Object.values(employeeHours);
+      
+      // If no data, use some default brand guidelines names for mockup
+      const chartLabels = labels.length > 0 ? labels : ['gopika', 'soumita', 'anurag', 'nishant', 'sai'];
+      const chartData = data.length > 0 ? data : [8.5, 7.2, 9.0, 8.0, 6.5];
+      
+      const ctx = document.getElementById('hoursChart').getContext('2d');
+      
+      if (hoursChartInstance) {
+        hoursChartInstance.destroy();
+      }
+      
+      hoursChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartLabels.map(l => l.toUpperCase()),
+          datasets: [{
+            label: 'Total Hours Tracked',
+            data: chartData,
+            backgroundColor: [
+              'rgba(31, 60, 126, 0.85)',  // brandBlue
+              'rgba(80, 70, 182, 0.85)',  // brandPurple
+              'rgba(200, 70, 158, 0.85)', // brandPink
+              'rgba(31, 60, 126, 0.6)',
+              'rgba(80, 70, 182, 0.6)'
+            ],
+            borderColor: [
+              '#1f3c7e',
+              '#5046b6',
+              '#c8469e',
+              '#1f3c7e',
+              '#5046b6'
+            ],
+            borderWidth: 1.5,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              },
+              ticks: {
+                color: '#64748b',
+                font: {
+                  family: 'Poppins',
+                  size: 10
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: '#64748b',
+                font: {
+                  family: 'Poppins',
+                  size: 10,
+                  weight: 'bold'
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // MANAGER NAVIGATION TABS
+    function switchMgrTab(tabId) {
+      // Hide all tabs
+      document.querySelectorAll('.mgr-tab-body').forEach(b => b.classList.add('hidden'));
+      
+      // Un-select all header buttons
+      ['attendance', 'timeline', 'kanbans', 'summaries', 'leaves'].forEach(id => {
+        const btn = document.getElementById('mgr-tab-' + id);
+        if (btn) {
+          btn.className = "px-6 py-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition";
+        }
+      });
+      
+      // Select selected
+      const selectedBtn = document.getElementById('mgr-tab-' + tabId);
+      if (selectedBtn) {
+        selectedBtn.className = "px-6 py-4 text-xs font-bold text-brandBlue border-b-2 border-brandBlue transition";
+      }
+      const tabBody = document.getElementById('mgr-body-' + tabId);
+      tabBody.classList.remove('hidden', 'fade-in');
+      void tabBody.offsetWidth; // Reflow trigger
+      tabBody.classList.add('fade-in');
+      
+      // Specific action
+      if (tabId === 'attendance') {
+        renderAttendanceList();
+      } else if (tabId === 'timeline') {
+        renderTimelineSheet();
+      } else if (tabId === 'kanbans') {
+        populateEmployeeSelector();
+      } else if (tabId === 'summaries') {
+        renderSummariesList();
+      } else if (tabId === 'leaves') {
+        renderLeavesTracker();
+      }
+    }
+
+    function toggleAttendanceSort() {
+      state.mgrAttendanceSortOrder = state.mgrAttendanceSortOrder === 'desc' ? 'asc' : 'desc';
+      document.getElementById('mgr-attendance-sort-text').innerText = state.mgrAttendanceSortOrder === 'desc' ? 'Newest First' : 'Oldest First';
+      renderAttendanceList();
+    }
+
+    function renderAttendanceList() {
+      const tbody = document.getElementById('mgr-attendance-rows');
+      tbody.innerHTML = '';
+      
+      let logs = [...state.managerData.time_logs];
+      
+      // Sort logs by date and login time
+      logs.sort((a, b) => {
+        const dateA = new Date(a.date + 'T' + (a.login_time || '00:00:00'));
+        const dateB = new Date(b.date + 'T' + (b.login_time || '00:00:00'));
+        return state.mgrAttendanceSortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+      });
+      
+      if (logs.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-8 text-slate-400 text-xs">No time clock logs found in the database.</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      logs.forEach(log => {
+        const isCheckedIn = log.logout_time === '';
+        const statusBadge = isCheckedIn 
+          ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-600 border border-green-100 animate-pulse">Active</span>`
+          : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500">Offline</span>`;
+          
+        const row = document.createElement('tr');
+        row.className = "border-b border-slate-50 hover:bg-slate-50/50 transition fade-in";
+        
+        const hasHours = log.total_hours !== '' && log.total_hours !== null && log.total_hours !== undefined;
+        row.innerHTML = `
+          <td class="py-3.5 pr-4 font-bold text-slate-800 capitalize">${log.username}</td>
+          <td class="py-3.5 px-4 text-xs text-slate-500">${log.date}</td>
+          <td class="py-3.5 px-4 text-xs text-slate-600">${formatTimeTo12h(log.login_time)}</td>
+          <td class="py-3.5 px-4 text-xs text-slate-600">${log.logout_time ? formatTimeTo12h(log.logout_time) : '--:--:--'}</td>
+          <td class="py-3.5 px-4 text-xs text-slate-800 font-bold">${hasHours ? parseFloat(log.total_hours).toFixed(2) + ' hrs' : '--'}</td>
+          <td class="py-3.5 pl-4">${statusBadge}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // HELPER: Format a time string or Date value into "12:15 PM" 12h format
+    function formatTimeTo12h(timeStr) {
+      if (!timeStr || timeStr === '--' || timeStr.toString().indexOf(':') === -1) return timeStr || '--:--:--';
+      try {
+        let str = timeStr.toString();
+        // If it already has AM/PM, return it
+        if (str.toLowerCase().indexOf('am') !== -1 || str.toLowerCase().indexOf('pm') !== -1) {
+          return str;
+        }
+        
+        let timePart = str;
+        if (str.indexOf(' ') !== -1) {
+          // Handle full Date strings e.g. "Sat Dec 30 1899 09:15:00 GMT..."
+          const match = str.match(/\d{2}:\d{2}:\d{2}/);
+          if (match) {
+            timePart = match[0];
+          }
+        }
+        
+        const parts = timePart.split(':');
+        let hrs = parseInt(parts[0]);
+        const mins = parts[1].padStart(2, '0');
+        const ampm = hrs >= 12 ? 'PM' : 'AM';
+        hrs = hrs % 12;
+        hrs = hrs ? hrs : 12; // 0 hour becomes 12
+        const hrsStr = hrs.toString().padStart(2, '0');
+        return `${hrsStr}:${mins} ${ampm}`;
+      } catch (e) {
+        return timeStr;
+      }
+    }
+
+    // HELPER: Convert time string HH:MM:SS to decimal hours
+    function timeToDecimal(timeStr) {
+      if (!timeStr) return 0;
+      try {
+        let str = timeStr.toString();
+        if (str.indexOf(' ') !== -1) {
+          const match = str.match(/\d{2}:\d{2}:\d{2}/);
+          if (match) str = match[0];
+        }
+        const parts = str.split(':');
+        const hrs = parseInt(parts[0]) || 0;
+        const mins = parseInt(parts[1]) || 0;
+        const secs = parseInt(parts[2]) || 0;
+        return hrs + mins / 60 + secs / 3600;
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    // MANAGER TIMELINE SHEET VIEWER
+    function renderTimelineSheet() {
+      const dateInput = document.getElementById('mgr-timeline-date');
+      if (!dateInput.value) {
+        dateInput.value = getLocalDateString();
+      }
+      const selectedDate = dateInput.value;
+      const container = document.getElementById('mgr-timeline-sheet');
+      container.innerHTML = '';
+      
+      const logs = state.managerData.time_logs;
+      
+      // Get unique registered users, ensuring defaults are present
+      const allUsers = [...new Set([
+        ...logs.map(l => l.username.toLowerCase()),
+        'gopika', 'soumita', 'anurag', 'nishant', 'sai', 'hana'
+      ])];
+      
+      allUsers.forEach(username => {
+        // Find log for this user on the selected date
+        const userLog = logs.find(l => l.username.toLowerCase() === username && l.date === selectedDate);
+        
+        let barHtml = '';
+        let detailsHtml = '<span class="text-slate-400 italic text-[11px]">Absent / Offline (No logs recorded today)</span>';
+        
+        if (userLog) {
+          const login = userLog.login_time;
+          const logout = userLog.logout_time;
+          
+          const loginDec = timeToDecimal(login);
+          let logoutDec = logout ? timeToDecimal(logout) : timeToDecimal(getLocalTimeString());
+          
+          if (logoutDec < loginDec) logoutDec = loginDec;
+          
+          // Map to 24-hour visual progress bar percentages
+          const startPct = (loginDec / 24) * 100;
+          const endPct = (logoutDec / 24) * 100;
+          const widthPct = Math.max(endPct - startPct, 1.5); // Minimum 1.5% width for visibility
+          
+          const isActive = logout === '';
+          const barColorClass = isActive ? 'brand-gradient animate-pulse' : 'bg-brandBlue';
+          
+          barHtml = `
+            <div class="relative w-full h-8 bg-slate-100 rounded-lg overflow-hidden border border-slate-200/50">
+              <!-- Colored active block -->
+              <div class="absolute h-full ${barColorClass}" style="left: ${startPct}%; width: ${widthPct}%;"></div>
+              
+              <!-- Grid markers -->
+              <div class="absolute inset-0 flex justify-between text-[8px] text-slate-400/80 font-bold px-2 pointer-events-none items-center">
+                <span>12 AM</span>
+                <span>6 AM</span>
+                <span>12 PM</span>
+                <span>6 PM</span>
+                <span>12 AM</span>
+              </div>
+            </div>
+          `;
+          
+          const hasHours = userLog.total_hours !== '' && userLog.total_hours !== null && userLog.total_hours !== undefined;
+          detailsHtml = `
+            <div class="flex justify-between items-center text-xs font-semibold text-slate-600 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+              <div>In: <span class="text-brandBlue font-bold">${formatTimeTo12h(login)}</span></div>
+              <div>Out: <span class="text-brandBlue font-bold">${logout ? formatTimeTo12h(logout) : 'Active Now'}</span></div>
+              <div>Duration: <span class="text-brandPurple font-extrabold">${hasHours ? parseFloat(userLog.total_hours).toFixed(2) + ' hrs' : 'Running...'}</span></div>
+            </div>
+          `;
+        } else {
+          barHtml = `
+            <div class="w-full h-8 bg-slate-50 border border-dashed border-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400 italic">
+              Offline / Out of Office
+            </div>
+          `;
+        }
+        
+        const card = document.createElement('div');
+        card.className = "bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-between space-y-3";
+        card.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <h4 class="font-bold text-slate-800 capitalize text-xs flex items-center">
+              <span class="h-2 w-2 rounded-full mr-2 ${userLog ? (userLog.logout_time === '' ? 'bg-green-500 animate-pulse' : 'bg-brandBlue') : 'bg-slate-300'}"></span>
+              ${username}
+            </h4>
+            <span class="text-[9px] text-slate-400 font-bold uppercase">${selectedDate}</span>
+          </div>
+          ${barHtml}
+          ${detailsHtml}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // MANAGER KANBAN VIEWER
+    function populateEmployeeSelector() {
+      const select = document.getElementById('mgr-kanban-employee-select');
+      if (!select) return;
+      select.innerHTML = '';
+      
+      const defaultUsers = ['gopika', 'soumita', 'sai', 'anurag', 'nishant', 'hana'];
+      
+      // Get unique employees from tasks safely and merge with default users
+      const taskUsers = state.managerData.tasks
+        ? state.managerData.tasks.filter(t => t && t.username).map(t => t.username.trim().toLowerCase())
+        : [];
+        
+      const users = [...new Set([
+        ...defaultUsers,
+        ...taskUsers
+      ])];
+      
+      users.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u;
+        opt.innerText = u.charAt(0).toUpperCase() + u.slice(1);
+        select.appendChild(opt);
+      });
+      
+      // Set selected employee to whatever is currently selected, or the first one in the list
+      if (!state.selectedMgrKanbanEmployee || !users.includes(state.selectedMgrKanbanEmployee)) {
+        state.selectedMgrKanbanEmployee = users[0];
+      }
+      select.value = state.selectedMgrKanbanEmployee;
+      
+      renderSelectedEmployeeKanban();
+    }
+
+    function renderSelectedEmployeeKanban() {
+      const select = document.getElementById('mgr-kanban-employee-select');
+      if (select.value) {
+        state.selectedMgrKanbanEmployee = select.value.toLowerCase();
+      }
+      
+      const emp = state.selectedMgrKanbanEmployee;
+      
+      const colTodo = document.getElementById('mgr-col-todo');
+      const colInprogress = document.getElementById('mgr-col-inprogress');
+      const colCompleted = document.getElementById('mgr-col-completed');
+      
+      colTodo.innerHTML = '';
+      colInprogress.innerHTML = '';
+      colCompleted.innerHTML = '';
+      
+      const today = getLocalDateString();
+      // Filter tasks for selected employee for today only
+      const empTasks = state.managerData.tasks.filter(t => t.username.toLowerCase() === emp && t.date === today);
+      
+      let countTodo = 0;
+      let countInprogress = 0;
+      let countCompleted = 0;
+      
+      empTasks.forEach(task => {
+        const card = document.createElement('div');
+        card.className = "bg-white border border-slate-200/60 p-3 rounded-lg shadow-sm hover:shadow transition";
+        card.innerHTML = `
+          <div class="text-xs font-semibold text-slate-700 leading-relaxed">${task.title}</div>
+          <div class="text-[9px] text-slate-400 mt-2">Log Date: ${task.date}</div>
+        `;
+        
+        if (task.status === 'todo') {
+          countTodo++;
+          colTodo.appendChild(card);
+        } else if (task.status === 'inprogress') {
+          countInprogress++;
+          colInprogress.appendChild(card);
+        } else if (task.status === 'completed') {
+          countCompleted++;
+          colCompleted.appendChild(card);
+        }
+      });
+      
+      document.getElementById('mgr-todo-count').innerText = countTodo;
+      document.getElementById('mgr-inprogress-count').innerText = countInprogress;
+      document.getElementById('mgr-completed-count').innerText = countCompleted;
+      
+      // If no tasks at all
+      if (empTasks.length === 0) {
+        const emptyMsg = `<div class="text-center py-6 text-slate-400 text-xs italic">No tasks logged.</div>`;
+        colTodo.innerHTML = emptyMsg;
+        colInprogress.innerHTML = emptyMsg;
+        colCompleted.innerHTML = emptyMsg;
+      }
+    }
+
+    function toggleSummariesSort() {
+      state.mgrSummariesSortOrder = state.mgrSummariesSortOrder === 'desc' ? 'asc' : 'desc';
+      document.getElementById('mgr-summaries-sort-text').innerText = state.mgrSummariesSortOrder === 'desc' ? 'Newest First' : 'Oldest First';
+      renderSummariesList();
+    }
+
+    // MANAGER SUMMARIES VIEWER
+    function renderSummariesList() {
+      const container = document.getElementById('mgr-summaries-list');
+      container.innerHTML = '';
+      
+      let summaries = [...state.managerData.summaries];
+      
+      // Sort summaries by date/timestamp
+      summaries.sort((a, b) => {
+        const dateA = new Date(a.created_at || a.date);
+        const dateB = new Date(b.created_at || b.date);
+        return state.mgrSummariesSortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+      });
+      
+      if (summaries.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 bg-slate-50 border border-dashed rounded-2xl p-6 text-slate-400 text-xs italic">
+            No daily work summaries have been submitted yet.
+          </div>
+        `;
+        return;
+      }
+      
+      summaries.forEach(s => {
+        const date = new Date(s.created_at || s.date);
+        const dateStr = isNaN(date.getTime()) ? s.date : date.toLocaleString();
+        
+        const card = document.createElement('div');
+        card.className = "bg-slate-50/50 border border-slate-200/50 p-5 rounded-2xl space-y-2";
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-bold text-slate-800 capitalize">${s.username}</div>
+            <div class="text-[10px] text-slate-400 font-semibold">${dateStr}</div>
+          </div>
+          <div class="text-xs text-slate-600 leading-relaxed whitespace-pre-line bg-white border border-slate-100 p-3 rounded-xl">${s.summary}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // MANAGER LEAVES TRACKER VIEWER
+    function renderLeavesTracker() {
+      const monthInput = document.getElementById('mgr-leaves-month');
+      if (!monthInput.value) {
+        monthInput.value = getCurrentMonthString();
+      }
+      const selectedMonth = monthInput.value; // YYYY-MM
+      const parts = selectedMonth.split('-');
+      const yearPart = parts[0];
+      const monthIndex = parseInt(parts[1]) || 1;
+      
+      const tbody = document.getElementById('mgr-leaves-rows');
+      tbody.innerHTML = '';
+      
+      const logs = state.managerData.time_logs;
+      // Get unique users from system
+      const allUsers = [...new Set([
+        ...logs.map(l => l.username.toLowerCase()),
+        'gopika', 'soumita', 'anurag', 'nishant', 'sai', 'hana'
+      ])];
+      
+      allUsers.forEach(username => {
+        // Find leaves log for this user for the selected month
+        const record = state.managerData.leaves.find(l => l.username.toLowerCase() === username && l.month === selectedMonth);
+        const clTaken = record ? parseFloat(record.casual_leaves) || 0 : 0;
+        const mlTaken = record ? parseFloat(record.medical_leaves) || 0 : 0;
+        
+        // Calculate accrued CL up to this month (accrual starts fresh from July 2026)
+        const startYear = 2026;
+        const startMonth = 7;
+        const yearDiff = parseInt(yearPart) - startYear;
+        const monthDiff = monthIndex - startMonth;
+        const totalMonths = (yearDiff * 12) + monthDiff + 1; // 1-based index
+        const clAccrued = totalMonths > 0 ? totalMonths * 1.0 : 0;
+        
+        // Sum up CL taken up to and including this month since July 2026 (carry forward)
+        const clTakenUpToNow = state.managerData.leaves
+          .filter(l => l.username.toLowerCase() === username)
+          .filter(l => {
+            const lp = l.month.split('-');
+            const ly = parseInt(lp[0]);
+            const lm = parseInt(lp[1]) || 1;
+            // Only count months since July 2026 up to selected month
+            if (ly < startYear || (ly === startYear && lm < startMonth)) return false;
+            return ly < parseInt(yearPart) || (ly === parseInt(yearPart) && lm <= monthIndex);
+          })
+          .reduce((sum, l) => sum + (parseFloat(l.casual_leaves) || 0), 0);
+          
+        const remainingCL = Math.max(0, clAccrued - clTakenUpToNow);
+        const remainingML = Math.max(0, 1.0 - mlTaken);
+        
+        const row = document.createElement('tr');
+        row.className = "border-b border-slate-50 hover:bg-slate-50/50 transition fade-in";
+        row.innerHTML = `
+          <td class="py-3.5 pr-4 font-bold text-slate-800 capitalize flex items-center">
+            <span class="h-1.5 w-1.5 rounded-full bg-brandBlue mr-2"></span>
+            ${username}
+          </td>
+          
+          <td class="py-3.5 px-4 text-center">
+            <div class="inline-flex items-center space-x-2 bg-slate-100/60 border border-slate-200/50 px-2.5 py-1 rounded-xl">
+              <button onclick="updateEmployeeLeaves('${username}', 'casual', -0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition">-</button>
+              <span class="text-xs font-bold text-slate-800 w-8">${clTaken.toFixed(1)}</span>
+              <button onclick="updateEmployeeLeaves('${username}', 'casual', 0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition">+</button>
+            </div>
+          </td>
+          
+          <td class="py-3.5 px-4 text-center">
+            <div class="inline-flex items-center space-x-2 bg-slate-100/60 border border-slate-200/50 px-2.5 py-1 rounded-xl">
+              <button onclick="updateEmployeeLeaves('${username}', 'medical', -0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition">-</button>
+              <span class="text-xs font-bold text-slate-800 w-8">${mlTaken.toFixed(1)}</span>
+              <button onclick="updateEmployeeLeaves('${username}', 'medical', 0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition">+</button>
+            </div>
+          </td>
+          
+          <td class="py-3.5 px-4 text-center bg-slate-50/20 font-bold text-brandBlue text-xs">
+            ${remainingCL.toFixed(1)} days
+          </td>
+          
+          <td class="py-3.5 pl-4 text-center bg-slate-50/20 font-bold text-brandPurple text-xs">
+            ${remainingML.toFixed(1)} days
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+      updateLeavesSaveButtonState();
+    }
+
+    function updateEmployeeLeaves(username, type, change) {
+      const month = document.getElementById('mgr-leaves-month').value || getCurrentMonthString();
+      const userKey = username.toLowerCase();
+      
+      let record = state.managerData.leaves.find(l => l.username.toLowerCase() === userKey && l.month === month);
+      if (!record) {
+        record = {
+          username: username,
+          month: month,
+          casual_leaves: 0,
+          medical_leaves: 0
+        };
+        state.managerData.leaves.push(record);
+      }
+      
+      if (type === 'casual') {
+        record.casual_leaves = Math.max(0, (parseFloat(record.casual_leaves) || 0) + change);
+      } else if (type === 'medical') {
+        record.medical_leaves = Math.max(0, (parseFloat(record.medical_leaves) || 0) + change);
+      }
+      
+      const changeKey = userKey + "_" + month;
+      state.unsavedLeaveChanges[changeKey] = {
+        username: username,
+        month: month,
+        casual_leaves: record.casual_leaves,
+        medical_leaves: record.medical_leaves
+      };
+      
+      renderLeavesTracker();
+    }
+
+    function updateLeavesSaveButtonState() {
+      const keys = Object.keys(state.unsavedLeaveChanges);
+      const btn = document.getElementById('btn-save-leaves');
+      const countEl = document.getElementById('unsaved-leaves-count');
+      
+      if (keys.length > 0) {
+        btn.classList.remove('hidden');
+        countEl.innerText = keys.length;
+      } else {
+        btn.classList.add('hidden');
+      }
+    }
+
+    async function syncLeavesChanges() {
+      const keys = Object.keys(state.unsavedLeaveChanges);
+      if (keys.length === 0) return;
+      
+      const updates = keys.map(k => state.unsavedLeaveChanges[k]);
+      
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'save_leaves_bulk',
+        updates: updates
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        state.unsavedLeaveChanges = {};
+        updateLeavesSaveButtonState();
+        alert("Leave changes saved successfully!");
+      } else {
+        alert("Failed to save leaves: " + (res.error || "Network error"));
+      }
+    }
+
+    function getCurrentMonthString() {
+      const d = new Date();
+      let month = "" + (d.getMonth() + 1);
+      const year = d.getFullYear();
+      if (month.length < 2) month = "0" + month;
+      return `${year}-${month}`;
+    }
+
+    // ==================== DEVELOPER / USER VIEW CONTROLLER ====================
+    async function resetDatabase() {
+      if (!confirm("WARNING: Are you absolutely sure you want to permanently clear all database transactional logs (Leave records, Time logs, Tasks, and Summaries)? Registered users will not be deleted.")) {
+        return;
+      }
+      
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'reset_database'
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        alert("Database successfully reset to a clean state.");
+        // Clear local caches
+        state.managerData.time_logs = [];
+        state.managerData.tasks = [];
+        state.managerData.summaries = [];
+        state.managerData.leaves = [];
+        state.tasks = [];
+        
+        // Refresh grids if visible
+        renderAttendanceList();
+        renderTimelineSheet();
+        renderLeavesTracker();
+        renderSummariesList();
+      } else {
+        alert("Reset failed: " + (res.error || "Unknown error"));
+      }
+    }
+
+    async function loadDeveloperData() {
+      // Load configuration URL inside the inputs
+      document.getElementById('dev-config-url').value = state.configUrl;
+      
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'get_all_users'
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        state.devUsers = res.users || [];
+        renderDeveloperUsersGrid();
+      } else {
+        alert("Error loading users database: " + (res.error || "Connection failure"));
+      }
+    }
+
+    function renderDeveloperUsersGrid() {
+      const tbody = document.getElementById('dev-user-rows');
+      tbody.innerHTML = '';
+      
+      if (state.devUsers.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="text-center py-6 text-slate-400 text-xs">No registered users in spreadsheet database.</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      state.devUsers.forEach(u => {
+        // Style badges for roles
+        const roles = u.role.split(',').map(r => r.trim());
+        const roleBadges = roles.map(r => {
+          let colorClass = "bg-slate-100 text-slate-600";
+          if (r === 'manager') colorClass = "bg-purple-50 text-brandPurple border border-purple-100/50";
+          if (r === 'developer') colorClass = "bg-pink-50 text-brandPink border border-pink-100/50";
+          if (r === 'employee') colorClass = "bg-blue-50 text-brandBlue border border-blue-100/50";
+          return `<span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${colorClass} capitalize mr-1">${r}</span>`;
+        }).join('');
+        
+        const row = document.createElement('tr');
+        row.className = "border-b border-slate-50 hover:bg-slate-50/50 transition fade-in";
+        row.innerHTML = `
+          <td class="py-3.5 pr-4 font-bold text-slate-800">${u.username}</td>
+          <td class="py-3.5 px-4 font-mono text-xs text-slate-500">${u.password}</td>
+          <td class="py-3.5 px-4">${roleBadges}</td>
+          <td class="py-3.5 pl-4 text-right space-x-1">
+            <button onclick="openUserModal('${u.username}')" class="p-1.5 text-slate-400 hover:text-brandBlue hover:bg-slate-100 rounded-lg transition" title="Edit credentials">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+            <button onclick="deleteUser('${u.username}')" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition" title="Delete employee">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // DEVELOPER USERS MODAL INTERFACE
+    function openUserModal(username = null) {
+      const modal = document.getElementById('modal-user');
+      const title = document.getElementById('user-modal-title');
+      const inputUsername = document.getElementById('user-modal-username');
+      const inputPassword = document.getElementById('user-modal-password');
+      const origUsername = document.getElementById('user-modal-orig-username');
+      const errDiv = document.getElementById('user-modal-error');
+      
+      errDiv.classList.add('hidden');
+      
+      // Checkboxes
+      const cbEmployee = document.getElementById('role-cb-employee');
+      const cbManager = document.getElementById('role-cb-manager');
+      const cbDeveloper = document.getElementById('role-cb-developer');
+      
+      cbEmployee.checked = true; // Employee is always baseline
+      cbManager.checked = false;
+      cbDeveloper.checked = false;
+      
+      if (username) {
+        title.innerText = "Edit User Settings";
+        const u = state.devUsers.find(usr => usr.username && usr.username.toLowerCase() === username.toLowerCase());
+        
+        if (u) {
+          inputUsername.value = u.username;
+          inputPassword.value = u.password;
+          origUsername.value = u.username;
+          
+          const roles = (u.role || "").split(',').map(r => r.trim());
+          cbManager.checked = roles.includes('manager');
+          cbDeveloper.checked = roles.includes('developer');
+        } else {
+          console.error("User not found in state:", username);
+          inputUsername.value = username;
+          inputPassword.value = '';
+          origUsername.value = username;
+        }
+      } else {
+        title.innerText = "Add New User";
+        inputUsername.value = '';
+        inputPassword.value = '';
+        origUsername.value = '';
+      }
+      
+      modal.classList.remove('hidden');
+    }
+
+    function closeUserModal() {
+      document.getElementById('modal-user').classList.add('hidden');
+    }
+
+    async function submitUserForm() {
+      const username = document.getElementById('user-modal-username').value.trim();
+      const password = document.getElementById('user-modal-password').value.trim();
+      const origUsername = document.getElementById('user-modal-orig-username').value.trim();
+      const errDiv = document.getElementById('user-modal-error');
+      
+      errDiv.classList.add('hidden');
+      
+      if (!username || !password) {
+        errDiv.innerText = "Please specify a username and password.";
+        errDiv.classList.remove('hidden');
+        return;
+      }
+      
+      // Determine roles
+      const roles = ['employee'];
+      if (document.getElementById('role-cb-manager').checked) roles.push('manager');
+      if (document.getElementById('role-cb-developer').checked) roles.push('developer');
+      
+      const subAction = origUsername ? 'edit' : 'add';
+      
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'manage_users',
+        sub_action: subAction,
+        username: username,
+        password: password,
+        role: roles.join(','),
+        orig_username: origUsername
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        closeUserModal();
+        loadDeveloperData(); // Reload grid
+      } else {
+        alert("Server error details: " + (res ? res.error || JSON.stringify(res) : "No response"));
+        errDiv.innerText = (res && res.error) ? res.error : "Failed to save user configuration.";
+        errDiv.classList.remove('hidden');
+      }
+    }
+
+    async function deleteUser(username) {
+      if (username.toLowerCase() === 'hana') {
+        alert("Security restriction: Hana is the lead developer/owner and cannot be deleted.");
+        return;
+      }
+      if (state.currentUser && state.currentUser.username.toLowerCase() === username.toLowerCase()) {
+        alert("Security restriction: You cannot delete your own active administrator account.");
+        return;
+      }
+      if (!confirm(`Are you sure you want to permanently remove employee user: "${username}"?`)) {
+        return;
+      }
+      
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'manage_users',
+        sub_action: 'delete',
+        username: username
+      });
+      toggleLoader(false);
+      
+      if (res && res.success) {
+        loadDeveloperData();
+      } else {
+        alert("Error deleting user: " + (res.error || "Server issue"));
+      }
+    }
+
+    // ==================== LOCAL RUN MOCKS (TESTING) ====================
+    function mockPythonBackend(method, arg) {
+      if (method === 'get_config') {
+        const stored = localStorage.getItem('pf_mock_config_url');
+        return { success: true, url: stored || '' };
+      }
+      if (method === 'save_config') {
+        localStorage.setItem('pf_mock_config_url', arg);
+        return { success: true };
+      }
+      if (method === 'api_request') {
+        // Simulate Apps Script delays & returns
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(handleMockApiRequest(arg));
+          }, 300);
+        });
+      }
+      return { success: false, error: 'Method not supported' };
+    }
+
+    function handleMockApiRequest(data) {
+      const action = data.action;
+      
+      // Fetch users mock local storage
+      let users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+      if (users.length === 0) {
+        users = [
+          { username: "gopika", password: "gopika@pf", role: "employee" },
+          { username: "anurag", password: "anurag@pf", role: "employee,manager" },
+          { username: "hana", password: "8376ti.ger3110", role: "employee,manager,developer" },
+          { username: "soumita", password: "soumita@pf", role: "employee" },
+          { username: "nishant", password: "nishant@pf", role: "employee,manager" },
+          { username: "sai", password: "sai@PF", role: "employee" }
+        ];
+        localStorage.setItem('mock_users', JSON.stringify(users));
+      }
+      
+      // Fetch logs mock local storage
+      let logs = JSON.parse(localStorage.getItem('mock_logs') || '[]');
+      let tasks = JSON.parse(localStorage.getItem('mock_tasks') || '[]');
+      let summaries = JSON.parse(localStorage.getItem('mock_summaries') || '[]');
+      
+      const today = getLocalDateString();
+      
+      if (action === 'login') {
+        const u = data.username.toLowerCase();
+        const p = data.password;
+        
+        const matched = users.find(usr => usr.username.toLowerCase() === u && usr.password === p);
+        if (matched) {
+          // Attendance check
+          const activeLog = logs.find(l => l.username.toLowerCase() === u && l.date === today);
+          const attendance = activeLog ? {
+            is_logged_in: activeLog.logout_time === '',
+            login_time: activeLog.login_time,
+            logout_time: activeLog.logout_time,
+            total_hours: activeLog.total_hours
+          } : { is_logged_in: false, login_time: null, logout_time: null, total_hours: 0 };
+          
+          return { success: true, user: { username: matched.username, role: matched.role }, attendance };
+        }
+        return { success: false, error: "Invalid mock username or password" };
+      }
+      
+      if (action === 'log_time') {
+        const u = data.username.toLowerCase();
+        const type = data.type;
+        const now = getLocalTimeString();
+        
+        if (type === 'login') {
+          const idx = logs.findIndex(l => l.username.toLowerCase() === u && l.date === today);
+          if (idx !== -1 && logs[idx].logout_time === '') {
+            return { success: false, error: "Already logged in" };
+          }
+          const newLog = { username: u, date: today, login_time: now, logout_time: '', total_hours: '' };
+          logs.push(newLog);
+          localStorage.setItem('mock_logs', JSON.stringify(logs));
+          return { success: true, attendance: { is_logged_in: true, login_time: now, logout_time: '', total_hours: null } };
+        } else if (type === 'logout') {
+          const idx = logs.findIndex(l => l.username.toLowerCase() === u && l.date === today && l.logout_time === '');
+          if (idx !== -1) {
+            logs[idx].logout_time = now;
+            logs[idx].total_hours = 8.0; // Mock 8 hours working
+            localStorage.setItem('mock_logs', JSON.stringify(logs));
+            return { success: true, attendance: { is_logged_in: false, login_time: logs[idx].login_time, logout_time: now, total_hours: 8.0 } };
+          }
+          return { success: false, error: "No active log-in session for today" };
+        }
+      }
+      
+      if (action === 'get_user_tasks') {
+        const u = data.username.toLowerCase();
+        const userTasks = tasks.filter(t => t.username.toLowerCase() === u);
+        const summ = summaries.find(s => s.username.toLowerCase() === u && s.date === today);
+        return { success: true, tasks: userTasks, today_summary: summ ? summ.summary : '' };
+      }
+      
+      if (action === 'add_tasks') {
+        const u = data.username.toLowerCase();
+        const added = [];
+        data.tasks.forEach(t => {
+          const newT = {
+            task_id: 'mock_' + Math.random().toString(36).substr(2, 9),
+            username: u,
+            date: today,
+            title: t,
+            status: 'todo',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          tasks.push(newT);
+          added.push(newT);
+        });
+        localStorage.setItem('mock_tasks', JSON.stringify(tasks));
+        return { success: true, added };
+      }
+      
+      if (action === 'update_task_status') {
+        const idx = tasks.findIndex(t => t.task_id === data.task_id);
+        if (idx !== -1) {
+          tasks[idx].status = data.status;
+          tasks[idx].updated_at = new Date().toISOString();
+          localStorage.setItem('mock_tasks', JSON.stringify(tasks));
+          return { success: true };
+        }
+        return { success: false, error: "Task not found" };
+      }
+      
+      if (action === 'save_summary') {
+        const u = data.username.toLowerCase();
+        const idx = summaries.findIndex(s => s.username.toLowerCase() === u && s.date === today);
+        if (idx !== -1) {
+          summaries[idx].summary = data.summary;
+          summaries[idx].created_at = new Date().toISOString();
+        } else {
+          summaries.push({ username: u, date: today, summary: data.summary, created_at: new Date().toISOString() });
+        }
+        localStorage.setItem('mock_summaries', JSON.stringify(summaries));
+        return { success: true };
+      }
+      
+      if (action === 'get_manager_data') {
+        return { success: true, time_logs: logs, tasks: tasks, summaries: summaries };
+      }
+      
+      if (action === 'get_all_users') {
+        return { success: true, users };
+      }
+      
+      if (action === 'manage_users') {
+        const sub = data.sub_action;
+        const u = data.username.toLowerCase();
+        
+        if (sub === 'add') {
+          if (users.find(usr => usr.username.toLowerCase() === u)) {
+            return { success: false, error: "User already exists" };
+          }
+          users.push({ username: data.username, password: data.password, role: data.role });
+          localStorage.setItem('mock_users', JSON.stringify(users));
+          return { success: true };
+        } else if (sub === 'edit') {
+          const idx = users.findIndex(usr => usr.username.toLowerCase() === data.orig_username.toLowerCase());
+          if (idx !== -1) {
+            users[idx].username = data.username;
+            users[idx].password = data.password;
+            users[idx].role = data.role;
+            localStorage.setItem('mock_users', JSON.stringify(users));
+            return { success: true };
+          }
+          return { success: false, error: "User not found" };
+        } else if (sub === 'delete') {
+          const idx = users.findIndex(usr => usr.username.toLowerCase() === u);
+          if (idx !== -1) {
+            users.splice(idx, 1);
+            localStorage.setItem('mock_users', JSON.stringify(users));
+            return { success: true };
+          }
+          return { success: false, error: "User not found" };
+        }
+      }
+      
+      return { success: false, error: "Action not mocked" };
+    }
+
+    // ==================== ONLOAD INITIALIZATION ====================
+    window.onload = function() {
+      // Injects logo dynamically
+      document.getElementById('header-logo-container').innerHTML = PERIFERRY_SVG_LOGO;
+      document.getElementById('login-logo-container').innerHTML = PERIFERRY_SVG_LOGO;
+      
+      // Startup clocks
+      setInterval(updateClock, 1000);
+      updateClock();
+      
+      // Safely wait for pywebview injection to avoid race conditions
+      if (window.pywebview) {
+        initializeApplication();
+      } else {
+        let initialized = false;
+        window.addEventListener('pywebviewready', () => {
+          if (!initialized) {
+            initialized = true;
+            initializeApplication();
+          }
+        });
+        // Fallback for standard browser testing
+        setTimeout(() => {
+          if (!initialized) {
+            initialized = true;
+            initializeApplication();
+          }
+        }, 150);
+      }
+    };
+
+    function initializeApplication() {
+      // Auto-restore session from LocalStorage (if any)
+      const cached = localStorage.getItem('pf_session');
+      if (cached) {
+        try {
+          const session = JSON.parse(cached);
+          state.currentUser = session.user;
+          state.attendance = session.attendance;
+          
+          state.configUrl = 'https://script.google.com/macros/s/AKfycbzdN_JoCmrwDbM_9Bi7XU84kKIdGz2sMCK8gDIPev4jR58WDZvn0PddRDIkZ13LNQQW0w/exec';
+          handlePostLoginNavigation();
+          return;
+        } catch (e) {
+          localStorage.removeItem('pf_session');
+        }
+      }
+      
+      checkLocalConfig();
+    }
+  </script>
+</body>
+</html>
