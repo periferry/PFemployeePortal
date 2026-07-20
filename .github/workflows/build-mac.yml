@@ -2,7 +2,9 @@ name: Build macOS Installer Package
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - '**'
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -21,14 +23,25 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests pywebview pyinstaller pillow
+          pip install requests pywebview pyinstaller pillow pyobjc-framework-Cocoa pyobjc-framework-WebKit
 
       - name: Build macOS App & DMG Installer
         run: |
           python build_mac.py
 
+      - name: Compress App Bundle for Artifact Upload
+        run: |
+          cd dist
+          zip -r "PeriFerry_Employee_Portal_macOS_App.zip" "PeriFerry Employee Portal.app"
+
       - name: Upload macOS DMG Installer Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PeriFerry-Employee-Portal-macOS
+          name: PeriFerry-Employee-Portal-macOS-DMG
           path: dist/PeriFerry Employee Portal.dmg
+
+      - name: Upload macOS App Zip Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PeriFerry-Employee-Portal-macOS-App
+          path: dist/PeriFerry_Employee_Portal_macOS_App.zip

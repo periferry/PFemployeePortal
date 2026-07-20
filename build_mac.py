@@ -21,7 +21,7 @@ def install_and_import(package, import_name=None):
     try:
         __import__(import_name)
     except ImportError:
-        print(f"Installing missing build dependency '{package}'...")
+        print(f"[+] Installing missing build dependency '{package}'...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 def convert_png_to_icns(png_path, icns_path):
@@ -30,8 +30,7 @@ def convert_png_to_icns(png_path, icns_path):
         from PIL import Image
         img = Image.open(png_path)
         
-        # Create iconset directory for iconutil if available
-        iconset_dir = "logo.iconset"
+        iconset_dir = os.path.abspath("logo.iconset")
         os.makedirs(iconset_dir, exist_ok=True)
         
         sizes = [16, 32, 64, 128, 256, 512]
@@ -43,13 +42,15 @@ def convert_png_to_icns(png_path, icns_path):
             
         if shutil.which("iconutil"):
             subprocess.run(["iconutil", "-c", "icns", iconset_dir, "-o", icns_path], check=True)
-            shutil.rmtree(iconset_dir, ignore_errors=True)
-            print(f"Successfully generated ICNS icon: {icns_path}")
+            if os.path.exists(iconset_dir):
+                shutil.rmtree(iconset_dir, ignore_errors=True)
+            print(f"[✓] Successfully generated ICNS icon: {icns_path}")
             return icns_path
         else:
-            shutil.rmtree(iconset_dir, ignore_errors=True)
+            if os.path.exists(iconset_dir):
+                shutil.rmtree(iconset_dir, ignore_errors=True)
     except Exception as e:
-        print(f"Notice: ICNS generation skipped ({e}). PyInstaller will use standard assets.")
+        print(f"[!] Notice: ICNS generation skipped ({e}). PyInstaller will use standard assets.")
     return None
 
 def main():
@@ -69,92 +70,121 @@ def main():
         print("=" * 60)
         sys.exit(0)
 
-    # 1. Install required python packages
-    install_and_import("Pillow", "PIL")
-    install_and_import("pyinstaller")
-    install_and_import("pywebview")
-    install_and_import("requests")
-
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    logo_png = os.path.join(current_dir, "PERIFERRY LOGO PACKAGE", "PF PRIMARY LOGO", "DIGITAL", "PNG", "logo.png")
-    icns_path = os.path.join(current_dir, "logo.icns")
-
-    # 2. Generate ICNS icon if logo PNG exists
-    icon_file = None
-    if os.path.exists(logo_png):
-        icon_file = convert_png_to_icns(logo_png, icns_path)
-
-    # 3. Assemble PyInstaller command for macOS
-    # Path separator for --add-data is ':' on Unix/macOS
-    cmd = [
-        "pyinstaller",
-        "--noconsole",
-        "--windowed",
-        "--add-data", f"{os.path.join(current_dir, 'index.html')}:.",
-        "--name", "PeriFerry Employee Portal",
-        "app.py"
-    ]
-
-    if os.path.exists(os.path.join(current_dir, "config.json")):
-        cmd.extend(["--add-data", f"{os.path.join(current_dir, 'config.json')}:."])
-
-    if icon_file and os.path.exists(icon_file):
-        cmd.extend(["--icon", icon_file])
-
-    print("\n[+] Compiling macOS Application Bundle (.app)...")
-    print("    Running:", " ".join(cmd))
-    subprocess.check_call(cmd, cwd=current_dir)
-
-    app_path = os.path.join(current_dir, "dist", "PeriFerry Employee Portal.app")
-    dmg_path = os.path.join(current_dir, "dist", "PeriFerry Employee Portal.dmg")
-
-    if not os.path.exists(app_path):
-        print("\n[!] Error: App bundle was not found at:", app_path)
-        sys.exit(1)
-
-    print("\n[✓] Created macOS App Bundle:", app_path)
-
-    # 4. Create DMG Installer disk image using native macOS 'hdiutil' tool
-    print("\n[+] Packaging into macOS DMG Installer Disk Image...")
-    
-    # Remove existing DMG if any
-    if os.path.exists(dmg_path):
-        os.remove(dmg_path)
-
-    # Temporary staging folder for DMG
-    dmg_stage = os.path.join(current_dir, "dist", "dmg_stage")
-    if os.path.exists(dmg_stage):
-        shutil.rmtree(dmg_stage)
-    os.makedirs(dmg_stage)
-
-    # Copy .app bundle to staging folder
-    shutil.copytree(app_path, os.path.join(dmg_stage, "PeriFerry Employee Portal.app"))
-
-    # Create symlink to /Applications inside DMG for easy Drag & Drop installation
-    os.symlink("/Applications", os.path.join(dmg_stage, "Applications"))
-
-    # Run hdiutil to create compressed DMG
-    hdiutil_cmd = [
-        "hdiutil", "create",
-        "-volname", "PeriFerry Employee Portal",
-        "-srcfolder", dmg_stage,
-        "-ov",
-        "-format", "UDZO",
-        dmg_path
-    ]
-
     try:
-        subprocess.check_call(hdiutil_cmd)
-        shutil.rmtree(dmg_stage)
-        print("\n" + "=" * 60)
-        print("          MACOS BUILD COMPLETED SUCCESSFULLY!          ")
-        print("=" * 60)
-        print("  macOS App Bundle :", app_path)
-        print("  macOS DMG Package:", dmg_path)
-        print("=" * 60)
-    except Exception as e:
-        print("\n[!] Warning: DMG creation failed:", e)
-        print("    You can still use the .app bundle located in dist/ folder.")
+        # 1. Install required python packages
+        install_and_import("Pillow", "PIL")
+        install_and_import("pyinstaller", "PyInstaller")
+        install_and_import("pywebview", "webview")
+        install_and_import("requests")
+
+        # Install macOS PyWebView webkit backend dependencies
+        try:
+            install_and_import("pyobjc-framework-Cocoa", "objc")
+            install_and_import("pyobjc-framework-WebKit", "WebKit")
+        except Exception as e:
+            print(f"[!] Warning installing pyobjc frameworks: {e}")
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        logo_png = os.path.join(current_dir, "PERIFERRY LOGO PACKAGE", "PF PRIMARY LOGO", "DIGITAL", "PNG", "logo.png")
+        icns_path = os.path.join(current_dir, "logo.icns")
+
+        # 2. Generate ICNS icon if logo PNG exists
+        icon_file = None
+        if os.path.exists(logo_png):
+            icon_file = convert_png_to_icns(logo_png, icns_path)
+
+        # 3. Assemble PyInstaller command for macOS
+        # Always use sys.executable -m PyInstaller to avoid PATH issues on macOS
+        cmd = [
+            sys.executable, "-m", "PyInstaller",
+            "--noconsole",
+            "--windowed",
+            "--add-data", f"{os.path.join(current_dir, 'index.html')}:.",
+            "--name", "PeriFerry Employee Portal",
+            "app.py"
+        ]
+
+        if os.path.exists(os.path.join(current_dir, "config.json")):
+            cmd.extend(["--add-data", f"{os.path.join(current_dir, 'config.json')}:."])
+
+        if icon_file and os.path.exists(icon_file):
+            cmd.extend(["--icon", icon_file])
+
+        print("\n[+] Compiling macOS Application Bundle (.app)...")
+        print("    Running:", " ".join(cmd))
+        subprocess.check_call(cmd, cwd=current_dir)
+
+        app_path = os.path.join(current_dir, "dist", "PeriFerry Employee Portal.app")
+        dmg_path = os.path.join(current_dir, "dist", "PeriFerry Employee Portal.dmg")
+
+        if not os.path.exists(app_path):
+            print("\n[!] Error: App bundle was not created at:", app_path)
+            sys.exit(1)
+
+        print("\n[✓] Created macOS App Bundle:", app_path)
+
+        # Apply ad-hoc codesignature for macOS Gatekeeper execution
+        if shutil.which("codesign"):
+            print("[+] Applying ad-hoc code signature to app bundle...")
+            try:
+                subprocess.run(["codesign", "--deep", "--force", "-s", "-", app_path], check=True)
+                print("[✓] Code signature applied successfully.")
+            except Exception as cs_err:
+                print(f"[!] Warning: Code signing failed: {cs_err}")
+
+        # 4. Create DMG Installer disk image using native macOS 'hdiutil' tool
+        print("\n[+] Packaging into macOS DMG Installer Disk Image...")
+        
+        # Remove existing DMG if any
+        if os.path.exists(dmg_path):
+            os.remove(dmg_path)
+
+        # Temporary staging folder for DMG
+        dmg_stage = os.path.join(current_dir, "dist", "dmg_stage")
+        if os.path.exists(dmg_stage):
+            shutil.rmtree(dmg_stage, ignore_errors=True)
+        os.makedirs(dmg_stage, exist_ok=True)
+
+        # Copy .app bundle to staging folder
+        target_app_in_stage = os.path.join(dmg_stage, "PeriFerry Employee Portal.app")
+        if os.path.exists(target_app_in_stage):
+            shutil.rmtree(target_app_in_stage, ignore_errors=True)
+        shutil.copytree(app_path, target_app_in_stage)
+
+        # Create symlink to /Applications inside DMG for easy Drag & Drop installation
+        apps_link = os.path.join(dmg_stage, "Applications")
+        if os.path.exists(apps_link) or os.path.islink(apps_link):
+            os.unlink(apps_link)
+        os.symlink("/Applications", apps_link)
+
+        # Run hdiutil to create compressed DMG
+        hdiutil_cmd = [
+            "hdiutil", "create",
+            "-volname", "PeriFerry Employee Portal",
+            "-srcfolder", dmg_stage,
+            "-ov",
+            "-format", "UDZO",
+            dmg_path
+        ]
+
+        try:
+            subprocess.check_call(hdiutil_cmd)
+            shutil.rmtree(dmg_stage, ignore_errors=True)
+            print("\n" + "=" * 60)
+            print("          MACOS BUILD COMPLETED SUCCESSFULLY!          ")
+            print("=" * 60)
+            print("  macOS App Bundle :", app_path)
+            print("  macOS DMG Package:", dmg_path)
+            print("=" * 60)
+        except Exception as e:
+            print("\n[!] Warning: DMG creation failed:", e)
+            print("    You can still use the .app bundle located in dist/ folder.")
+
+    except Exception as exc:
+        print(f"\n[!] macOS Build Error: {exc}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
