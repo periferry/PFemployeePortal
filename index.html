@@ -941,19 +941,30 @@
           console.error("Error calling Python method:", method, e);
           return { success: false, error: e.message || e.toString() };
         }
+      } else if (method === 'get_config') {
+        const stored = localStorage.getItem('pf_config_url');
+        const defaultUrl = 'https://script.google.com/macros/s/AKfycbzdN_JoCmrwDbM_9Bi7XU84kKIdGz2sMCK8gDIPev4jR58WDZvn0PddRDIkZ13LNQQW0w/exec';
+        return { success: true, url: stored || defaultUrl };
+      } else if (method === 'save_config') {
+        localStorage.setItem('pf_config_url', arg);
+        state.configUrl = arg;
+        return { success: true };
       } else if (method === 'api_request') {
         // Direct browser fetch to Google Apps Script for static web hosting (Vercel, Netlify, GitHub Pages)
         try {
           const targetUrl = state.configUrl || 'https://script.google.com/macros/s/AKfycbzdN_JoCmrwDbM_9Bi7XU84kKIdGz2sMCK8gDIPev4jR58WDZvn0PddRDIkZ13LNQQW0w/exec';
           const response = await fetch(targetUrl, {
             method: 'POST',
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8'
+            },
             body: JSON.stringify(arg)
           });
-          const data = await response.json();
-          return data;
+          const text = await response.text();
+          return JSON.parse(text);
         } catch (e) {
-          console.warn("Direct fetch failed, falling back to mock:", e);
-          return mockPythonBackend(method, arg);
+          console.error("Direct browser fetch to Google Apps Script failed:", e);
+          return { success: false, error: "Network connection to database failed: " + (e.message || e.toString()) };
         }
       } else {
         return mockPythonBackend(method, arg);
