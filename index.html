@@ -1163,7 +1163,7 @@
             const username = arg.username;
             const today = getLocalDateString();
             
-            const tasks = await supabaseFetch(`/tasks?username=ilike.${username}&or=(date.eq.${today},status.eq.todo,status.eq.inprogress)`);
+            const tasks = await supabaseFetch(`/tasks?username=ilike.${username}&or=${encodeURIComponent(`(date.eq.${today},status.eq.todo,status.eq.inprogress)`)}`);
             const summaries = await supabaseFetch(`/daily_summaries?username=ilike.${username}&date=eq.${today}`);
             const leaves = await supabaseFetch(`/leaves?username=ilike.${username}`);
             const requests = await supabaseFetch(`/leave_requests?username=ilike.${username}`);
@@ -1906,7 +1906,18 @@
       let countInprogress = 0;
       let countCompleted = 0;
       
+      const todayStr = getLocalDateString();
+      
       state.tasks.forEach(task => {
+        // Safe check: Only render if it's today's task OR if the task is incomplete (todo/inprogress)
+        const taskDate = task.date ? task.date.substring(0, 10) : '';
+        const isToday = taskDate === todayStr;
+        const isIncomplete = task.status === 'todo' || task.status === 'inprogress';
+        
+        if (!isToday && !isIncomplete) {
+          return; // Skip historical completed tasks
+        }
+        
         const card = document.createElement('div');
         card.className = "bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover-lift transition duration-200 flex flex-col justify-between space-y-3 fade-in";
         
