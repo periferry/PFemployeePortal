@@ -270,7 +270,7 @@
         <div class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1.5">Username</label>
-            <input type="text" id="login-username" placeholder="e.g. gopika" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent text-sm transition duration-200">
+            <input type="text" id="login-username" placeholder="e.g. edyn" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent text-sm transition duration-200">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
@@ -899,7 +899,7 @@
       <div class="space-y-4 text-left">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1.5">Username</label>
-          <input type="text" id="user-modal-username" placeholder="gopika" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm transition">
+          <input type="text" id="user-modal-username" placeholder="edyn" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm transition">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
@@ -2151,7 +2151,7 @@
       const data = Object.values(employeeHours);
       
       // If no data, use some default brand guidelines names for mockup
-      const chartLabels = labels.length > 0 ? labels : ['gopika', 'soumita', 'anurag', 'nishant', 'sai'];
+      const chartLabels = labels.length > 0 ? labels : ['edyn', 'soumita', 'anurag', 'nishant', 'sai'];
       const chartData = data.length > 0 ? data : [8.5, 7.2, 9.0, 8.0, 6.5];
       
       const ctx = document.getElementById('hoursChart').getContext('2d');
@@ -2380,7 +2380,7 @@
       // Get unique registered users, ensuring defaults are present
       const allUsers = [...new Set([
         ...logs.map(l => l.username.toLowerCase()),
-        'gopika', 'soumita', 'anurag', 'nishant', 'sai', 'hana'
+        'edyn', 'soumita', 'anurag', 'nishant', 'sai', 'hana'
       ])];
       
       allUsers.forEach(username => {
@@ -2462,7 +2462,7 @@
       if (!select) return;
       select.innerHTML = '';
       
-      const defaultUsers = ['gopika', 'soumita', 'sai', 'anurag', 'nishant', 'hana'];
+      const defaultUsers = ['edyn', 'soumita', 'sai', 'anurag', 'nishant', 'hana'];
       
       // Get unique employees from tasks safely and merge with default users
       const taskUsers = state.managerData.tasks
@@ -2611,7 +2611,7 @@
       // Get unique users from system
       const allUsers = [...new Set([
         ...logs.map(l => l.username.toLowerCase()),
-        'gopika', 'soumita', 'anurag', 'nishant', 'sai', 'hana'
+        'edyn', 'soumita', 'anurag', 'nishant', 'sai', 'hana'
       ])];
       
       allUsers.forEach(username => {
@@ -3188,7 +3188,7 @@
       let users = JSON.parse(localStorage.getItem('mock_users') || '[]');
       if (users.length === 0) {
         users = [
-          { username: "gopika", password: "gopika@pf", role: "employee" },
+          { username: "edyn", password: "edyn@pf", role: "employee" },
           { username: "anurag", password: "anurag@pf", role: "employee,manager" },
           { username: "hana", password: "8376ti.ger3110", role: "employee,manager,developer" },
           { username: "soumita", password: "soumita@pf", role: "employee" },
