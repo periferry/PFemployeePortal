@@ -1078,7 +1078,8 @@
         throw new Error(errorText || response.statusText);
       }
       if (response.status === 204) return null;
-      return await response.json();
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
     }
 
     // Call Python backend wrapper safely (or direct browser fetch when hosted on web)
