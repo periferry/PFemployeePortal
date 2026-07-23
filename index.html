@@ -236,13 +236,17 @@
           </svg>
         </div>
         
-        <h2 class="text-xl font-bold text-slate-800 mb-2">Connect to Database</h2>
-        <p class="text-sm text-slate-500 mb-6">Enter your Google Apps Script Web App URL below to connect the application to the spreadsheet.</p>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">Connect to Supabase Database</h2>
+        <p class="text-sm text-slate-500 mb-6">Enter your Supabase Project API credentials to connect the portal.</p>
         
         <div class="space-y-4 text-left">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Apps Script Web App URL</label>
-            <input type="text" id="config-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandPurple focus:border-transparent text-sm transition duration-200">
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Supabase API URL</label>
+            <input type="text" id="config-sb-url" placeholder="https://xxxxxx.supabase.co" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandPurple focus:border-transparent text-sm transition duration-200">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Supabase Anon (Public) Key</label>
+            <input type="text" id="config-sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandPurple focus:border-transparent text-sm transition duration-200">
           </div>
           
           <button onclick="saveConfiguration()" class="w-full py-3 rounded-xl text-white font-semibold text-sm brand-gradient brand-gradient-hover shadow-md shadow-brandBlue/10 transition duration-200">
@@ -836,20 +840,24 @@
       <div class="premium-glass rounded-3xl p-6">
         <h3 class="font-bold text-slate-800 text-sm mb-4">Local System Settings</h3>
         <div class="max-w-xl space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Configured Apps Script Web App URL</label>
-            <div class="flex space-x-2">
-              <input type="text" id="dev-config-url" class="w-full px-4 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none" readonly>
-              <button onclick="editConfigUrl()" class="px-4 py-2 text-xs font-bold text-brandBlue border border-brandBlue/20 hover:bg-brandBlue/5 rounded-xl transition">
-                Change URL
-              </button>
+          <div class="space-y-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Configured Supabase URL</label>
+              <input type="text" id="dev-config-sb-url" class="w-full px-4 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 focus:outline-none" readonly>
             </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Configured Supabase Key</label>
+              <input type="text" id="dev-config-sb-key" class="w-full px-4 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 focus:outline-none" readonly>
+            </div>
+            <button onclick="editConfigUrl()" class="mt-1 px-4 py-2 text-xs font-bold text-brandBlue border border-brandBlue/20 hover:bg-brandBlue/5 rounded-xl transition">
+              Update Database Credentials
+            </button>
           </div>
           
           <div class="pt-4 border-t border-slate-100 mt-4 flex items-center justify-between">
             <div>
               <h4 class="text-xs font-bold text-slate-700">Clear All Transactional Logs</h4>
-              <p class="text-[10px] text-slate-400 mt-0.5">Permanently delete leaves records, time logs, task lists, and summaries from the Google Sheet.</p>
+              <p class="text-[10px] text-slate-400 mt-0.5">Permanently delete leaves records, time logs, task lists, and summaries from the database.</p>
             </div>
             <button onclick="resetDatabase()" class="px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-red-600 hover:bg-red-700 transition shadow-md flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -933,7 +941,8 @@
   <script>
     // State management
     const state = {
-      configUrl: 'https://script.google.com/macros/s/AKfycbzdN_JoCmrwDbM_9Bi7XU84kKIdGz2sMCK8gDIPev4jR58WDZvn0PddRDIkZ13LNQQW0w/exec',
+      supabaseUrl: localStorage.getItem('pf_sb_url') || 'https://oijgqcmdofvicworgeir.supabase.co',
+      supabaseKey: localStorage.getItem('pf_sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamdxY21kb2Z2aWN3b3JnZWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NzYyMDAsImV4cCI6MjEwMDM1MjIwMH0.FnLH_PrbjEUvaPTC8hr-jtUeaAol31ReUKH6k-SQgdU',
       currentUser: null,  // { username, role }
       currentView: 'login', // login, config, role-select, employee, manager, developer
       attendance: {
@@ -1048,6 +1057,24 @@
       }
     }
 
+    // Supabase REST API fetch helper
+    async function supabaseFetch(endpoint, options = {}) {
+      const url = `${state.supabaseUrl}/rest/v1${endpoint}`;
+      const defaultHeaders = {
+        'apikey': state.supabaseKey,
+        'Authorization': `Bearer ${state.supabaseKey}`,
+        'Content-Type': 'application/json'
+      };
+      options.headers = { ...defaultHeaders, ...options.headers };
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || response.statusText);
+      }
+      if (response.status === 204) return null;
+      return await response.json();
+    }
+
     // Call Python backend wrapper safely (or direct browser fetch when hosted on web)
     async function callPython(method, arg = null) {
       if (window.pywebview && window.pywebview.api && window.pywebview.api[method]) {
@@ -1059,29 +1086,307 @@
           return { success: false, error: e.message || e.toString() };
         }
       } else if (method === 'get_config') {
-        const stored = localStorage.getItem('pf_config_url');
-        const defaultUrl = 'https://script.google.com/macros/s/AKfycbzdN_JoCmrwDbM_9Bi7XU84kKIdGz2sMCK8gDIPev4jR58WDZvn0PddRDIkZ13LNQQW0w/exec';
+        const stored = localStorage.getItem('pf_sb_url');
+        const defaultUrl = 'https://oijgqcmdofvicworgeir.supabase.co';
         return { success: true, url: stored || defaultUrl };
       } else if (method === 'save_config') {
-        localStorage.setItem('pf_config_url', arg);
-        state.configUrl = arg;
+        localStorage.setItem('pf_sb_url', arg);
+        state.supabaseUrl = arg;
         return { success: true };
       } else if (method === 'api_request') {
-        // Direct browser fetch to Google Apps Script for static web hosting (Vercel, Netlify, GitHub Pages)
+        const action = arg.action;
         try {
-          const targetUrl = state.configUrl || 'https://script.google.com/macros/s/AKfycbzdN_JoCmrwDbM_9Bi7XU84kKIdGz2sMCK8gDIPev4jR58WDZvn0PddRDIkZ13LNQQW0w/exec';
-          const response = await fetch(targetUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'text/plain;charset=utf-8'
-            },
-            body: JSON.stringify(arg)
-          });
-          const text = await response.text();
-          return JSON.parse(text);
+          if (action === 'login') {
+            const users = await supabaseFetch(`/users?username=ilike.${arg.username}`);
+            if (!users || users.length === 0) {
+              return { success: false, error: "Incorrect username or password." };
+            }
+            const user = users[0];
+            if (user.password !== arg.password) {
+              return { success: false, error: "Incorrect username or password." };
+            }
+            
+            // Check for active attendance logs
+            const active = await supabaseFetch(`/time_logs?username=ilike.${arg.username}&logout_time=is.null`);
+            let attendance = { is_logged_in: false, login_time: null, logout_time: null, total_hours: 0 };
+            if (active && active.length > 0) {
+              attendance = {
+                is_logged_in: true,
+                login_time: active[0].login_time,
+                logout_time: null,
+                total_hours: 0
+              };
+            }
+            return { success: true, user: { username: user.username, role: user.role }, attendance };
+            
+          } else if (action === 'log_time') {
+            const type = arg.type; // 'login' or 'logout'
+            const today = getLocalDateString();
+            const now = new Date().toISOString();
+            
+            if (type === 'login') {
+              const active = await supabaseFetch(`/time_logs?username=ilike.${arg.username}&logout_time=is.null`);
+              if (active && active.length > 0) {
+                return { success: false, error: "You are already logged in." };
+              }
+              await supabaseFetch('/time_logs', {
+                method: 'POST',
+                body: JSON.stringify({
+                  username: arg.username,
+                  date: today,
+                  login_time: now,
+                  logout_time: null,
+                  total_hours: 0
+                })
+              });
+              return { success: true, attendance: { is_logged_in: true, login_time: now, logout_time: null, total_hours: 0 } };
+            } else {
+              const active = await supabaseFetch(`/time_logs?username=ilike.${arg.username}&logout_time=is.null`);
+              if (!active || active.length === 0) {
+                return { success: false, error: "No active session found." };
+              }
+              const log = active[0];
+              const totalMs = new Date(now) - new Date(log.login_time);
+              const totalHours = Math.round((totalMs / (1000 * 60 * 60)) * 100) / 100;
+              
+              await supabaseFetch(`/time_logs?id=eq.${log.id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                  logout_time: now,
+                  total_hours: totalHours
+                })
+              });
+              return { success: true, attendance: { is_logged_in: false, login_time: log.login_time, logout_time: now, total_hours: totalHours } };
+            }
+            
+          } else if (action === 'get_user_tasks') {
+            const username = arg.username;
+            const today = getLocalDateString();
+            
+            const tasks = await supabaseFetch(`/tasks?username=ilike.${username}`);
+            const summaries = await supabaseFetch(`/daily_summaries?username=ilike.${username}&date=eq.${today}`);
+            const leaves = await supabaseFetch(`/leaves?username=ilike.${username}`);
+            const requests = await supabaseFetch(`/leave_requests?username=ilike.${username}`);
+            
+            return {
+              success: true,
+              tasks: tasks || [],
+              today_summary: (summaries && summaries.length > 0) ? summaries[0].summary : '',
+              leaves: leaves || [],
+              leave_requests: requests || []
+            };
+            
+          } else if (action === 'save_summary') {
+            const today = getLocalDateString();
+            const now = new Date().toISOString();
+            const existing = await supabaseFetch(`/daily_summaries?username=ilike.${arg.username}&date=eq.${today}`);
+            if (existing && existing.length > 0) {
+              await supabaseFetch(`/daily_summaries?id=eq.${existing[0].id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ summary: arg.summary })
+              });
+            } else {
+              await supabaseFetch('/daily_summaries', {
+                method: 'POST',
+                body: JSON.stringify({
+                  username: arg.username,
+                  date: today,
+                  summary: arg.summary,
+                  created_at: now
+                })
+              });
+            }
+            return { success: true };
+            
+          } else if (action === 'add_tasks') {
+            const now = new Date().toISOString();
+            await supabaseFetch('/tasks', {
+              method: 'POST',
+              body: JSON.stringify({
+                task_id: arg.task_id,
+                username: arg.username,
+                date: arg.date,
+                title: arg.title,
+                status: 'todo',
+                created_at: now,
+                updated_at: now
+              })
+            });
+            return { success: true };
+            
+          } else if (action === 'update_tasks_bulk') {
+            const now = new Date().toISOString();
+            const promises = arg.updates.map(item => {
+              return supabaseFetch(`/tasks?task_id=eq.${item.task_id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                  status: item.status,
+                  updated_at: now
+                })
+              });
+            });
+            await Promise.all(promises);
+            return { success: true };
+            
+          } else if (action === 'get_manager_data') {
+            const logs = await supabaseFetch('/time_logs?select=*');
+            const tasks = await supabaseFetch('/tasks?select=*');
+            const summaries = await supabaseFetch('/daily_summaries?select=*');
+            const leaves = await supabaseFetch('/leaves?select=*');
+            const requests = await supabaseFetch('/leave_requests?select=*');
+            
+            return {
+              success: true,
+              time_logs: logs || [],
+              tasks: tasks || [],
+              summaries: summaries || [],
+              leaves: leaves || [],
+              leave_requests: requests || []
+            };
+            
+          } else if (action === 'get_all_users') {
+            const users = await supabaseFetch('/users?select=*');
+            return { success: true, users: users || [] };
+            
+          } else if (action === 'manage_users') {
+            const subAction = arg.sub_action;
+            const username = arg.username;
+            const password = arg.password;
+            const role = arg.role;
+            const orig = arg.orig_username || username;
+            
+            if (subAction === 'add') {
+              const existing = await supabaseFetch(`/users?username=ilike.${username}`);
+              if (existing && existing.length > 0) {
+                return { success: false, error: "User already exists." };
+              }
+              await supabaseFetch('/users', {
+                method: 'POST',
+                body: JSON.stringify({ username, password, role })
+              });
+            } else if (subAction === 'edit') {
+              await supabaseFetch(`/users?username=ilike.${orig}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ username, password, role })
+              });
+            } else if (subAction === 'delete') {
+              await supabaseFetch(`/users?username=ilike.${username}`, {
+                method: 'DELETE'
+              });
+            }
+            return { success: true };
+            
+          } else if (action === 'save_leaves_bulk') {
+            const updates = arg.updates || [];
+            await supabaseFetch('/leaves', {
+              method: 'POST',
+              body: JSON.stringify(updates.map(item => ({
+                username: item.username,
+                month: item.month,
+                casual_leaves: parseFloat(item.casual_leaves) || 0,
+                medical_leaves: parseFloat(item.medical_leaves) || 0
+              }))),
+              headers: { 'Prefer': 'resolution=merge-duplicates' }
+            });
+            return { success: true };
+            
+          } else if (action === 'apply_leave') {
+            const id = 'REQ-' + Math.floor(Math.random() * 1000000);
+            const now = new Date().toISOString();
+            await supabaseFetch('/leave_requests', {
+              method: 'POST',
+              body: JSON.stringify({
+                request_id: id,
+                username: arg.username,
+                start_date: arg.start_date,
+                end_date: arg.end_date,
+                leave_type: arg.leave_type,
+                reason: arg.reason,
+                status: 'pending',
+                created_at: now
+              })
+            });
+            return { success: true };
+            
+          } else if (action === 'update_leave_request_status') {
+            const requestId = arg.request_id;
+            const status = arg.status;
+            
+            const requests = await supabaseFetch(`/leave_requests?request_id=eq.${requestId}`);
+            if (!requests || requests.length === 0) {
+              return { success: false, error: "Leave request not found." };
+            }
+            const req = requests[0];
+            if (req.status !== 'pending') {
+              return { success: false, error: "Request has already been processed." };
+            }
+            
+            await supabaseFetch(`/leave_requests?request_id=eq.${requestId}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ status })
+            });
+            
+            if (status === 'approved') {
+              const start = new Date(req.start_date);
+              const end = new Date(req.end_date);
+              const daysByMonth = {};
+              let curr = new Date(start);
+              while (curr <= end) {
+                const y = curr.getFullYear();
+                const m = curr.getMonth() + 1;
+                const monthStr = y + "-" + (m < 10 ? "0" + m : m);
+                daysByMonth[monthStr] = (daysByMonth[monthStr] || 0) + 1;
+                curr.setDate(curr.getDate() + 1);
+              }
+              
+              for (const month in daysByMonth) {
+                const increment = daysByMonth[month];
+                const current = await supabaseFetch(`/leaves?username=ilike.${req.username}&month=eq.${month}`);
+                let casual = 0;
+                let medical = 0;
+                if (current && current.length > 0) {
+                  casual = parseFloat(current[0].casual_leaves) || 0;
+                  medical = parseFloat(current[0].medical_leaves) || 0;
+                  
+                  if (req.leave_type === 'casual') casual += increment;
+                  else medical += increment;
+                  
+                  await supabaseFetch(`/leaves?id=eq.${current[0].id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                      casual_leaves: casual,
+                      medical_leaves: medical
+                    })
+                  });
+                } else {
+                  if (req.leave_type === 'casual') casual = increment;
+                  else medical = increment;
+                  
+                  await supabaseFetch('/leaves', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      username: req.username,
+                      month: month,
+                      casual_leaves: casual,
+                      medical_leaves: medical
+                    })
+                  });
+                }
+              }
+            }
+            return { success: true };
+            
+          } else if (action === 'reset_database') {
+            await supabaseFetch('/time_logs', { method: 'DELETE' });
+            await supabaseFetch('/tasks', { method: 'DELETE' });
+            await supabaseFetch('/daily_summaries', { method: 'DELETE' });
+            await supabaseFetch('/leaves', { method: 'DELETE' });
+            await supabaseFetch('/leave_requests', { method: 'DELETE' });
+            return { success: true };
+          }
         } catch (e) {
-          console.error("Direct browser fetch to Google Apps Script failed:", e);
-          return { success: false, error: "Network connection to database failed: " + (e.message || e.toString()) };
+          console.error("Supabase request failed:", e);
+          return { success: false, error: e.message || e.toString() };
         }
       } else {
         return mockPythonBackend(method, arg);
@@ -1143,32 +1448,44 @@
 
     // ==================== CONFIGURATION VIEW CONTROLLER ====================
     async function checkLocalConfig() {
-      // Preset URL and bypass database connection screen completely
-      state.configUrl = 'https://script.google.com/macros/s/AKfycbzdN_JoCmrwDbM_9Bi7XU84kKIdGz2sMCK8gDIPev4jR58WDZvn0PddRDIkZ13LNQQW0w/exec';
-      showView('login');
+      const url = localStorage.getItem('pf_sb_url') || 'https://oijgqcmdofvicworgeir.supabase.co';
+      const key = localStorage.getItem('pf_sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamdxY21kb2Z2aWN3b3JnZWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NzYyMDAsImV4cCI6MjEwMDM1MjIwMH0.FnLH_PrbjEUvaPTC8hr-jtUeaAol31ReUKH6k-SQgdU';
+      
+      state.supabaseUrl = url;
+      state.supabaseKey = key;
+      
+      document.getElementById('config-sb-url').value = url;
+      document.getElementById('config-sb-key').value = key;
+      
+      if (!key) {
+        showView('config');
+      } else {
+        showView('login');
+      }
     }
 
     async function saveConfiguration() {
-      const url = document.getElementById('config-url').value.trim();
-      if (!url) {
-        alert("Please enter a valid Google Apps Script Web App URL");
+      const url = document.getElementById('config-sb-url').value.trim();
+      const key = document.getElementById('config-sb-key').value.trim();
+      if (!url || !key) {
+        alert("Please enter both your Supabase API URL and Anon Key");
         return;
       }
       
       toggleLoader(true);
-      const res = await callPython('save_config', url);
+      localStorage.setItem('pf_sb_url', url);
+      localStorage.setItem('pf_sb_key', key);
+      
+      state.supabaseUrl = url;
+      state.supabaseKey = key;
       toggleLoader(false);
       
-      if (res && res.success) {
-        state.configUrl = url;
-        showView('login');
-      } else {
-        alert("Error saving configuration: " + (res.error || "Unknown error"));
-      }
+      showView('login');
     }
 
     function editConfigUrl() {
-      document.getElementById('config-url').value = state.configUrl;
+      document.getElementById('config-sb-url').value = state.supabaseUrl;
+      document.getElementById('config-sb-key').value = state.supabaseKey;
       showView('config');
     }
 
@@ -2644,8 +2961,9 @@
     }
 
     async function loadDeveloperData() {
-      // Load configuration URL inside the inputs
-      document.getElementById('dev-config-url').value = state.configUrl;
+      // Load configuration credentials inside the inputs
+      document.getElementById('dev-config-sb-url').value = state.supabaseUrl;
+      document.getElementById('dev-config-sb-key').value = state.supabaseKey;
       
       toggleLoader(true);
       const res = await callPython('api_request', {
