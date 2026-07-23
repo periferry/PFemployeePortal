@@ -80,6 +80,15 @@ function handleRequest(e) {
         
       case "save_leaves_bulk":
         return saveLeavesBulk(sheet, postData);
+
+      case "apply_leave":
+        return applyLeave(sheet, postData);
+
+      case "get_leave_requests":
+        return getLeaveRequests(sheet, postData);
+
+      case "update_leave_request_status":
+        return updateLeaveRequestStatus(sheet, postData);
         
       case "update_tasks_bulk":
         return updateTasksBulk(sheet, postData);
@@ -109,7 +118,7 @@ function initDatabase() {
   var sheets = ss.getSheets();
   var sheetNames = sheets.map(function(s) { return s.getName(); });
   
-  var required = ["Users", "TimeLogs", "Tasks", "DailySummaries", "Leaves"];
+  var required = ["Users", "TimeLogs", "Tasks", "DailySummaries", "Leaves", "LeaveRequests"];
   var allExist = required.every(function(name) {
     return sheetNames.indexOf(name) !== -1;
   });
@@ -158,6 +167,13 @@ function initDatabase() {
   if (!leavesSheet) {
     leavesSheet = ss.insertSheet("Leaves");
     leavesSheet.appendRow(["username", "month", "casual_leaves", "medical_leaves"]);
+  }
+
+  // 6. LeaveRequests Sheet
+  var leaveRequestsSheet = ss.getSheetByName("LeaveRequests");
+  if (!leaveRequestsSheet) {
+    leaveRequestsSheet = ss.insertSheet("LeaveRequests");
+    leaveRequestsSheet.appendRow(["request_id", "username", "start_date", "end_date", "leave_type", "reason", "status", "created_at"]);
   }
 }
 
@@ -430,7 +446,53 @@ function getUserTasks(sheet, data) {
     }
   }
   
-  return jsonResponse({ success: true, tasks: userTasks, today_summary: todaySummary });
+  // Get leaves records for this user
+  var leavesSheet = sheet.getSheetByName("Leaves");
+  var userLeaves = [];
+  if (leavesSheet) {
+    var leavesRows = leavesSheet.getDataRange().getValues();
+    for (var m = 1; m < leavesRows.length; m++) {
+      var lUser = leavesRows[m][0].toString().trim().toLowerCase();
+      if (lUser === username) {
+        userLeaves.push({
+          username: leavesRows[m][0].toString(),
+          month: formatMonthCell(leavesRows[m][1]),
+          casual_leaves: parseFloat(leavesRows[m][2]) || 0,
+          medical_leaves: parseFloat(leavesRows[m][3]) || 0
+        });
+      }
+    }
+  }
+
+  // Get leave requests for this user
+  var reqSheet = sheet.getSheetByName("LeaveRequests");
+  var userRequests = [];
+  if (reqSheet) {
+    var reqRows = reqSheet.getDataRange().getValues();
+    for (var r = 1; r < reqRows.length; r++) {
+      var rUser = reqRows[r][1].toString().trim().toLowerCase();
+      if (rUser === username) {
+        userRequests.push({
+          request_id: reqRows[r][0].toString(),
+          username: reqRows[r][1].toString(),
+          start_date: reqRows[r][2].toString(),
+          end_date: reqRows[r][3].toString(),
+          leave_type: reqRows[r][4].toString(),
+          reason: reqRows[r][5].toString(),
+          status: reqRows[r][6].toString(),
+          created_at: reqRows[r][7].toString()
+        });
+      }
+    }
+  }
+  
+  return jsonResponse({ 
+    success: true, 
+    tasks: userTasks, 
+    today_summary: todaySummary,
+    leaves: userLeaves,
+    leave_requests: userRequests
+  });
 }
 
 function addTasks(sheet, data) {
@@ -619,10 +681,29 @@ function getManagerData(sheet) {
   for (var m = 1; m < leavesRows.length; m++) {
     leaves.push({
       username: leavesRows[m][0].toString(),
-      month: leavesRows[m][1].toString(),
+      month: formatMonthCell(leavesRows[m][1]),
       casual_leaves: parseFloat(leavesRows[m][2]) || 0,
       medical_leaves: parseFloat(leavesRows[m][3]) || 0
     });
+  }
+  
+  // Get all leave requests
+  var reqSheet = sheet.getSheetByName("LeaveRequests");
+  var leaveRequests = [];
+  if (reqSheet) {
+    var reqRows = reqSheet.getDataRange().getValues();
+    for (var r = 1; r < reqRows.length; r++) {
+      leaveRequests.push({
+        request_id: reqRows[r][0].toString(),
+        username: reqRows[r][1].toString(),
+        start_date: reqRows[r][2].toString(),
+        end_date: reqRows[r][3].toString(),
+        leave_type: reqRows[r][4].toString(),
+        reason: reqRows[r][5].toString(),
+        status: reqRows[r][6].toString(),
+        created_at: reqRows[r][7].toString()
+      });
+    }
   }
   
   return jsonResponse({
@@ -630,7 +711,8 @@ function getManagerData(sheet) {
     time_logs: timeLogs,
     tasks: tasks,
     summaries: summaries,
-    leaves: leaves
+    leaves: leaves,
+    leave_requests: leaveRequests
   });
 }
 
@@ -722,7 +804,7 @@ function saveLeaves(sheet, data) {
   
   for (var i = 1; i < rows.length; i++) {
     var u = rows[i][0].toString().trim().toLowerCase();
-    var m = rows[i][1].toString().trim();
+    var m = formatMonthCell(rows[i][1]);
     if (u === username && m === month) {
       // Update existing record
       leavesSheet.getRange(i + 1, 3).setValue(casual);
@@ -765,6 +847,13 @@ function resetDatabase(sheet) {
     leavesSheet.getRange(1, 1, 1, 4).setValues([["username", "month", "casual_leaves", "medical_leaves"]]);
   }
   
+  // Clear LeaveRequests sheet (keeping headers)
+  var leaveRequestsSheet = sheet.getSheetByName("LeaveRequests");
+  if (leaveRequestsSheet) {
+    leaveRequestsSheet.clearContents();
+    leaveRequestsSheet.getRange(1, 1, 1, 8).setValues([["request_id", "username", "start_date", "end_date", "leave_type", "reason", "status", "created_at"]]);
+  }
+  
   return jsonResponse({ success: true, message: "Database reset completed successfully." });
 }
 
@@ -780,7 +869,7 @@ function saveLeavesBulk(sheet, data) {
   var keyToRowIndex = {};
   for (var i = 1; i < rows.length; i++) {
     var u = rows[i][0].toString().trim().toLowerCase();
-    var m = rows[i][1].toString().trim();
+    var m = formatMonthCell(rows[i][1]);
     keyToRowIndex[u + "_" + m] = i + 1;
   }
   
@@ -834,4 +923,168 @@ function updateTasksBulk(sheet, data) {
   }
   
   return jsonResponse({ success: true, message: "Bulk task status updated successfully" });
+}
+
+function applyLeave(sheet, data) {
+  var username = (data.username || "").trim().toLowerCase();
+  var startDate = (data.start_date || "").trim();
+  var endDate = (data.end_date || "").trim();
+  var leaveType = (data.leave_type || "casual").trim();
+  var reason = (data.reason || "").trim();
+  
+  if (!username || !startDate || !endDate) {
+    return jsonResponse({ success: false, error: "Username, start date, and end date are required" });
+  }
+  
+  var reqSheet = sheet.getSheetByName("LeaveRequests");
+  if (!reqSheet) {
+    reqSheet = sheet.insertSheet("LeaveRequests");
+    reqSheet.appendRow(["request_id", "username", "start_date", "end_date", "leave_type", "reason", "status", "created_at"]);
+  }
+  
+  var requestId = "REQ-" + Math.floor(Math.random() * 1000000);
+  var nowStr = getLocalDateString() + " " + getLocalTimeString();
+  
+  reqSheet.appendRow([requestId, username, startDate, endDate, leaveType, reason, "pending", nowStr]);
+  return jsonResponse({ success: true, message: "Leave request submitted successfully" });
+}
+
+function getLeaveRequests(sheet, data) {
+  var username = (data.username || "").trim().toLowerCase();
+  var reqSheet = sheet.getSheetByName("LeaveRequests");
+  if (!reqSheet) {
+    return jsonResponse({ success: true, requests: [] });
+  }
+  var rows = reqSheet.getDataRange().getValues();
+  var requests = [];
+  
+  for (var i = 1; i < rows.length; i++) {
+    var u = rows[i][1].toString().trim().toLowerCase();
+    if (!username || u === username) {
+      requests.push({
+        request_id: rows[i][0].toString(),
+        username: rows[i][1].toString(),
+        start_date: rows[i][2].toString(),
+        end_date: rows[i][3].toString(),
+        leave_type: rows[i][4].toString(),
+        reason: rows[i][5].toString(),
+        status: rows[i][6].toString(),
+        created_at: rows[i][7].toString()
+      });
+    }
+  }
+  return jsonResponse({ success: true, requests: requests });
+}
+
+function updateLeaveRequestStatus(sheet, data) {
+  var requestId = (data.request_id || "").trim();
+  var status = (data.status || "").trim(); // "approved" or "rejected"
+  
+  if (!requestId || !status) {
+    return jsonResponse({ success: false, error: "Request ID and status are required" });
+  }
+  
+  var reqSheet = sheet.getSheetByName("LeaveRequests");
+  var rows = reqSheet.getDataRange().getValues();
+  
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][0].toString().trim() === requestId) {
+      var currentStatus = rows[i][6].toString().trim();
+      if (currentStatus !== "pending") {
+        return jsonResponse({ success: false, error: "Request has already been processed" });
+      }
+      
+      // Update status
+      reqSheet.getRange(i + 1, 7).setValue(status);
+      
+      // If approved, dynamically calculate leaves and update the Leaves sheet
+      if (status === "approved") {
+        var username = rows[i][1].toString().trim().toLowerCase();
+        var startDateStr = rows[i][2].toString().trim();
+        var endDateStr = rows[i][3].toString().trim();
+        var leaveType = rows[i][4].toString().trim().toLowerCase(); // "casual" or "medical"
+        
+        // Parse dates and calculate monthly breakdown
+        var start = new Date(startDateStr);
+        var end = new Date(endDateStr);
+        
+        // Count days per month
+        var daysByMonth = {}; // e.g. {"2026-07": 2, "2026-08": 1}
+        var curr = new Date(start);
+        while (curr <= end) {
+          var y = curr.getFullYear();
+          var m = curr.getMonth() + 1;
+          var monthStr = y + "-" + (m < 10 ? "0" + m : m);
+          daysByMonth[monthStr] = (daysByMonth[monthStr] || 0) + 1;
+          curr.setDate(curr.getDate() + 1);
+        }
+        
+        // Update Leaves sheet for each month
+        var leavesSheet = sheet.getSheetByName("Leaves");
+        var leavesRows = leavesSheet.getDataRange().getValues();
+        
+        for (var month in daysByMonth) {
+          var increment = daysByMonth[month];
+          var found = false;
+          
+          for (var j = 1; j < leavesRows.length; j++) {
+            var u = leavesRows[j][0].toString().trim().toLowerCase();
+            var m = formatMonthCell(leavesRows[j][1]);
+            
+            if (u === username && m === month) {
+              var casualVal = parseFloat(leavesRows[j][2]) || 0;
+              var medicalVal = parseFloat(leavesRows[j][3]) || 0;
+              
+              if (leaveType === "casual") {
+                leavesSheet.getRange(j + 1, 3).setValue(casualVal + increment);
+              } else {
+                leavesSheet.getRange(j + 1, 4).setValue(medicalVal + increment);
+              }
+              found = true;
+              break;
+            }
+          }
+          
+          if (!found) {
+            // Append new row
+            var newCasual = leaveType === "casual" ? increment : 0;
+            var newMedical = leaveType === "medical" ? increment : 0;
+            leavesSheet.appendRow([username, month, newCasual, newMedical]);
+            // Reload rows to update internal index tracking in loop
+            leavesRows = leavesSheet.getDataRange().getValues();
+          }
+        }
+      }
+      
+      return jsonResponse({ success: true, message: "Leave request status updated successfully" });
+    }
+  }
+  
+  return jsonResponse({ success: false, error: "Leave request not found" });
+}
+
+function formatMonthCell(monthVal) {
+  if (monthVal instanceof Date) {
+    var month = "" + (monthVal.getMonth() + 1);
+    var year = monthVal.getFullYear();
+    if (month.length < 2) month = "0" + month;
+    return year + "-" + month;
+  }
+  
+  var str = (monthVal || "").toString().trim();
+  if (str.indexOf("GMT") !== -1 || (isNaN(Date.parse(str)) === false && str.indexOf("-") === -1)) {
+    var d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      var month = "" + (d.getMonth() + 1);
+      var year = d.getFullYear();
+      if (month.length < 2) month = "0" + month;
+      return year + "-" + month;
+    }
+  }
+  
+  if (str.length > 7 && str.charAt(4) === '-' && str.charAt(7) === '-') {
+    return str.substring(0, 7);
+  }
+  
+  return str;
 }
