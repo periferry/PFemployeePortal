@@ -31,8 +31,8 @@ def main():
     leaves = []
     for u in users:
         uname = u['username']
-        cl = 1.0
-        ml = 0.0 if uname == 'hana' else 1.0
+        cl = 0.0
+        ml = 1.0 if uname == 'hana' else 0.0
         leaves.append({
             'username': uname,
             'month': '2026-07',
@@ -46,7 +46,8 @@ def main():
         {'username': 'anurag', 'date': '2026-07-23', 'login_time': '2026-07-23T03:30:26Z', 'logout_time': None, 'total_hours': 0},
         {'username': 'edyn', 'date': '2026-07-23', 'login_time': '2026-07-23T04:04:43Z', 'logout_time': None, 'total_hours': 0},
         {'username': 'hana', 'date': '2026-07-23', 'login_time': '2026-07-23T03:57:11Z', 'logout_time': None, 'total_hours': 0},
-        {'username': 'soumita', 'date': '2026-07-23', 'login_time': '2026-07-23T04:00:11Z', 'logout_time': None, 'total_hours': 0}
+        {'username': 'soumita', 'date': '2026-07-23', 'login_time': '2026-07-23T04:00:11Z', 'logout_time': None, 'total_hours': 0},
+        {'username': 'sai', 'date': '2026-07-23', 'login_time': '2026-07-23T04:30:00Z', 'logout_time': None, 'total_hours': 0}
     ]
     requests.post(f"{SUPABASE_URL}/time_logs", json=time_logs, headers=headers)
 
