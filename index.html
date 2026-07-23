@@ -1175,12 +1175,25 @@
             const leaves = await supabaseFetch(`/leaves?username=ilike.${username}`);
             const requests = await supabaseFetch(`/leave_requests?username=ilike.${username}`);
             
+            // Sync current active time log from database
+            const active = await supabaseFetch(`/time_logs?username=ilike.${username}&date=eq.${today}&logout_time=is.null`);
+            let attendance = { is_logged_in: false, login_time: null, logout_time: null, total_hours: 0 };
+            if (active && active.length > 0) {
+              attendance = {
+                is_logged_in: true,
+                login_time: active[0].login_time,
+                logout_time: null,
+                total_hours: 0
+              };
+            }
+            
             return {
               success: true,
               tasks: tasks || [],
               today_summary: (summaries && summaries.length > 0) ? summaries[0].summary : '',
               leaves: leaves || [],
-              leave_requests: requests || []
+              leave_requests: requests || [],
+              attendance: attendance
             };
             
           } else if (action === 'save_summary') {
@@ -1736,6 +1749,17 @@
         state.tasks = res.tasks || [];
         state.userLeaves = res.leaves || [];
         state.userLeaveRequests = res.leave_requests || [];
+        
+        // Sync active check-in attendance log from database
+        if (res.attendance) {
+          state.attendance = res.attendance;
+          updateAttendanceUI();
+          
+          // Update cached session
+          const session = JSON.parse(localStorage.getItem('pf_session') || '{}');
+          session.attendance = res.attendance;
+          localStorage.setItem('pf_session', JSON.stringify(session));
+        }
         
         document.getElementById('daily-summary-text').value = res.today_summary || '';
         
@@ -2322,29 +2346,33 @@
 
     // HELPER: Format a time string or Date value into "12:15 PM" 12h format
     function formatTimeTo12h(timeStr) {
-      if (!timeStr || timeStr === '--' || timeStr.toString().indexOf(':') === -1) return timeStr || '--:--:--';
+      if (!timeStr || timeStr === '--') return '--:--:--';
       try {
-        let str = timeStr.toString();
-        // If it already has AM/PM, return it
-        if (str.toLowerCase().indexOf('am') !== -1 || str.toLowerCase().indexOf('pm') !== -1) {
-          return str;
-        }
-        
-        let timePart = str;
-        if (str.indexOf(' ') !== -1) {
-          // Handle full Date strings e.g. "Sat Dec 30 1899 09:15:00 GMT..."
-          const match = str.match(/\d{2}:\d{2}:\d{2}/);
-          if (match) {
-            timePart = match[0];
+        let dateObj;
+        const str = timeStr.toString().trim();
+        if (str.includes('-') || str.includes('T')) {
+          dateObj = new Date(str);
+        } else {
+          let timePart = str;
+          if (str.indexOf(' ') !== -1) {
+            const match = str.match(/\d{2}:\d{2}:\d{2}/);
+            if (match) timePart = match[0];
           }
+          const parts = timePart.split(':');
+          let hrs = parseInt(parts[0]);
+          const mins = parts[1].padStart(2, '0');
+          const ampm = hrs >= 12 ? 'PM' : 'AM';
+          hrs = hrs % 12;
+          hrs = hrs ? hrs : 12;
+          const hrsStr = hrs.toString().padStart(2, '0');
+          return `${hrsStr}:${mins} ${ampm}`;
         }
         
-        const parts = timePart.split(':');
-        let hrs = parseInt(parts[0]);
-        const mins = parts[1].padStart(2, '0');
+        let hrs = dateObj.getHours();
+        const mins = dateObj.getMinutes().toString().padStart(2, '0');
         const ampm = hrs >= 12 ? 'PM' : 'AM';
         hrs = hrs % 12;
-        hrs = hrs ? hrs : 12; // 0 hour becomes 12
+        hrs = hrs ? hrs : 12;
         const hrsStr = hrs.toString().padStart(2, '0');
         return `${hrsStr}:${mins} ${ampm}`;
       } catch (e) {
@@ -2352,19 +2380,26 @@
       }
     }
 
-    // HELPER: Convert time string HH:MM:SS to decimal hours
     function timeToDecimal(timeStr) {
       if (!timeStr) return 0;
       try {
-        let str = timeStr.toString();
-        if (str.indexOf(' ') !== -1) {
+        let dateObj;
+        const str = timeStr.toString().trim();
+        if (str.includes('-') || str.includes('T')) {
+          dateObj = new Date(str);
+        } else {
           const match = str.match(/\d{2}:\d{2}:\d{2}/);
-          if (match) str = match[0];
+          const t = match ? match[0] : str;
+          const parts = t.split(':');
+          const hrs = parseInt(parts[0]) || 0;
+          const mins = parseInt(parts[1]) || 0;
+          const secs = parseInt(parts[2]) || 0;
+          return hrs + mins / 60 + secs / 3600;
         }
-        const parts = str.split(':');
-        const hrs = parseInt(parts[0]) || 0;
-        const mins = parseInt(parts[1]) || 0;
-        const secs = parseInt(parts[2]) || 0;
+        
+        const hrs = dateObj.getHours();
+        const mins = dateObj.getMinutes();
+        const secs = dateObj.getSeconds();
         return hrs + mins / 60 + secs / 3600;
       } catch (e) {
         return 0;
