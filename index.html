@@ -1163,7 +1163,7 @@
             const username = arg.username;
             const today = getLocalDateString();
             
-            const tasks = await supabaseFetch(`/tasks?username=ilike.${username}`);
+            const tasks = await supabaseFetch(`/tasks?username=ilike.${username}&or=(date.eq.${today},status.eq.todo,status.eq.inprogress)`);
             const summaries = await supabaseFetch(`/daily_summaries?username=ilike.${username}&date=eq.${today}`);
             const leaves = await supabaseFetch(`/leaves?username=ilike.${username}`);
             const requests = await supabaseFetch(`/leave_requests?username=ilike.${username}`);
