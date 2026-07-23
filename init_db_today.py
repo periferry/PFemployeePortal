@@ -43,10 +43,10 @@ def main():
 
     print("[+] Seeding Login Times for 2026-07-23...")
     time_logs = [
-        {'username': 'anurag', 'date': '2026-07-23', 'login_time': '2026-07-23T09:00:26Z', 'logout_time': None, 'total_hours': 0},
-        {'username': 'edyn', 'date': '2026-07-23', 'login_time': '2026-07-23T09:34:43Z', 'logout_time': None, 'total_hours': 0},
-        {'username': 'hana', 'date': '2026-07-23', 'login_time': '2026-07-23T09:27:11Z', 'logout_time': None, 'total_hours': 0},
-        {'username': 'soumita', 'date': '2026-07-23', 'login_time': '2026-07-23T09:30:11Z', 'logout_time': None, 'total_hours': 0}
+        {'username': 'anurag', 'date': '2026-07-23', 'login_time': '2026-07-23T03:30:26Z', 'logout_time': None, 'total_hours': 0},
+        {'username': 'edyn', 'date': '2026-07-23', 'login_time': '2026-07-23T04:04:43Z', 'logout_time': None, 'total_hours': 0},
+        {'username': 'hana', 'date': '2026-07-23', 'login_time': '2026-07-23T03:57:11Z', 'logout_time': None, 'total_hours': 0},
+        {'username': 'soumita', 'date': '2026-07-23', 'login_time': '2026-07-23T04:00:11Z', 'logout_time': None, 'total_hours': 0}
     ]
     requests.post(f"{SUPABASE_URL}/time_logs", json=time_logs, headers=headers)
 

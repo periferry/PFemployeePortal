@@ -1036,10 +1036,16 @@
       // Update session timer if logged in
       if (state.currentUser && state.attendance && state.attendance.is_logged_in && state.attendance.login_time) {
         try {
-          const timeStr = extractTimeOnly(state.attendance.login_time);
-          const loginParts = timeStr.split(':');
-          const loginDate = new Date();
-          loginDate.setHours(parseInt(loginParts[0]) || 0, parseInt(loginParts[1]) || 0, parseInt(loginParts[2]) || 0);
+          let loginDate;
+          const loginTimeStr = state.attendance.login_time.toString();
+          if (loginTimeStr.includes('-') || loginTimeStr.includes('T')) {
+            loginDate = new Date(loginTimeStr);
+          } else {
+            const timeStr = extractTimeOnly(loginTimeStr);
+            const loginParts = timeStr.split(':');
+            loginDate = new Date();
+            loginDate.setHours(parseInt(loginParts[0]) || 0, parseInt(loginParts[1]) || 0, parseInt(loginParts[2]) || 0);
+          }
           
           let diffMs = now - loginDate;
           if (diffMs < 0) diffMs = 0;
