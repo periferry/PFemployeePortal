@@ -26,7 +26,7 @@ def main():
         {'username': 'nishant', 'password': 'nishant@pf', 'role': 'employee,manager,developer', 'status': 'offline'},
         {'username': 'sai', 'password': 'sai@PF', 'role': 'employee', 'status': 'offline'},
         {'username': 'edyn', 'password': 'edyn@pf', 'role': 'employee', 'status': 'offline'},
-        {'username': 'mohama', 'password': 'mohama@pf', 'role': 'employee,manager,developer', 'status': 'offline'}
+        {'username': 'mohana', 'password': 'mohana@pf', 'role': 'employee,manager,developer', 'status': 'offline'}
     ]
     res = requests.post(f"{SUPABASE_URL}/users", json=users, headers=headers)
     if res.ok:
