@@ -20,12 +20,13 @@ def main():
 
     print("[+] Seeding fresh default users...")
     users = [
-        {'username': 'anurag', 'password': 'anurag@pf', 'role': 'employee,manager'},
-        {'username': 'hana', 'password': '8376ti.ger3110', 'role': 'employee,manager,developer'},
-        {'username': 'soumita', 'password': 'soumita@pf', 'role': 'employee'},
-        {'username': 'nishant', 'password': 'nishant@pf', 'role': 'employee,manager'},
-        {'username': 'sai', 'password': 'sai@PF', 'role': 'employee'},
-        {'username': 'edyn', 'password': 'edyn@pf', 'role': 'employee'}
+        {'username': 'anurag', 'password': 'anurag@pf', 'role': 'employee,manager', 'status': 'offline'},
+        {'username': 'hana', 'password': '8376ti.ger3110', 'role': 'employee,manager,developer', 'status': 'offline'},
+        {'username': 'soumita', 'password': 'soumita@pf', 'role': 'employee', 'status': 'offline'},
+        {'username': 'nishant', 'password': 'nishant@pf', 'role': 'employee,manager,developer', 'status': 'offline'},
+        {'username': 'sai', 'password': 'sai@PF', 'role': 'employee', 'status': 'offline'},
+        {'username': 'edyn', 'password': 'edyn@pf', 'role': 'employee', 'status': 'offline'},
+        {'username': 'mohama', 'password': 'mohama@pf', 'role': 'employee,manager,developer', 'status': 'offline'}
     ]
     res = requests.post(f"{SUPABASE_URL}/users", json=users, headers=headers)
     if res.ok:
