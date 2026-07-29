@@ -21,9 +21,10 @@ def main():
         {'username': 'anurag', 'password': 'anurag@pf', 'role': 'employee,manager'},
         {'username': 'hana', 'password': '8376ti.ger3110', 'role': 'employee,manager,developer'},
         {'username': 'soumita', 'password': 'soumita@pf', 'role': 'employee'},
-        {'username': 'nishant', 'password': 'nishant@pf', 'role': 'employee,manager'},
+        {'username': 'nishant', 'password': 'nishant@pf', 'role': 'employee,manager,developer'},
         {'username': 'sai', 'password': 'sai@PF', 'role': 'employee'},
-        {'username': 'edyn', 'password': 'edyn@pf', 'role': 'employee'}
+        {'username': 'edyn', 'password': 'edyn@pf', 'role': 'employee'},
+        {'username': 'mohana', 'password': 'mohana@pf', 'role': 'employee,manager,developer'}
     ]
     requests.post(f"{SUPABASE_URL}/users", json=users, headers=headers)
 
