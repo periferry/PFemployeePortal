@@ -18,13 +18,12 @@ def main():
     print("[+] Wiping and re-seeding Users list (including 'edyn')...")
     requests.delete(f"{SUPABASE_URL}/users?username=neq.null", headers=headers)
     users = [
-        {'username': 'anurag', 'password': 'anurag@pf', 'role': 'employee,manager', 'status': 'online'},
-        {'username': 'hana', 'password': '8376ti.ger3110', 'role': 'employee,manager,developer', 'status': 'online'},
-        {'username': 'soumita', 'password': 'soumita@pf', 'role': 'employee', 'status': 'online'},
-        {'username': 'nishant', 'password': 'nishant@pf', 'role': 'employee,manager,developer', 'status': 'offline'},
-        {'username': 'sai', 'password': 'sai@PF', 'role': 'employee', 'status': 'offline'},
-        {'username': 'edyn', 'password': 'edyn@pf', 'role': 'employee', 'status': 'online'},
-        {'username': 'mohana', 'password': 'mohana@pf', 'role': 'employee,manager,developer', 'status': 'offline'}
+        {'username': 'anurag', 'password': 'anurag@pf', 'role': 'employee,manager'},
+        {'username': 'hana', 'password': '8376ti.ger3110', 'role': 'employee,manager,developer'},
+        {'username': 'soumita', 'password': 'soumita@pf', 'role': 'employee'},
+        {'username': 'nishant', 'password': 'nishant@pf', 'role': 'employee,manager'},
+        {'username': 'sai', 'password': 'sai@PF', 'role': 'employee'},
+        {'username': 'edyn', 'password': 'edyn@pf', 'role': 'employee'}
     ]
     requests.post(f"{SUPABASE_URL}/users", json=users, headers=headers)
 

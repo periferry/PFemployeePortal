@@ -303,19 +303,9 @@
     <section id="screen-employee" class="hidden w-full flex flex-col space-y-6 transition-all duration-300">
       <!-- Welcome & Action Summary Bar -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 premium-glass p-5 rounded-2xl">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div>
-            <h2 class="text-xl font-bold text-slate-800">Hello, <span class="employee-name text-brandBlue">Employee</span> 👋</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Let's log your attendance and organize your daily plan.</p>
-          </div>
-          <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200/40 px-3 py-1.5 rounded-xl sm:ml-2">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</span>
-            <select id="user-status-select" onchange="updateUserStatus(this.value)" class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer">
-              <option value="online">🟢 Online</option>
-              <option value="away">🟡 Away</option>
-              <option value="offline">⚪ Offline</option>
-            </select>
-          </div>
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Hello, <span class="employee-name text-brandBlue">Employee</span> 👋</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Let's log your attendance and organize your daily plan.</p>
         </div>
         <!-- Status & Log buttons -->
         <div class="flex items-center space-x-3">
@@ -1135,7 +1125,7 @@
                 total_hours: 0
               };
             }
-            return { success: true, user: { username: user.username, role: user.role, status: user.status || 'offline' }, attendance };
+            return { success: true, user: { username: user.username, role: user.role }, attendance };
             
           } else if (action === 'log_time') {
             const type = arg.type; // 'login' or 'logout'
@@ -1278,7 +1268,6 @@
             const summaries = await supabaseFetch('/daily_summaries?select=*');
             const leaves = await supabaseFetch('/leaves?select=*');
             const requests = await supabaseFetch('/leave_requests?select=*');
-            const users = await supabaseFetch('/users?select=*');
             
             return {
               success: true,
@@ -1286,20 +1275,12 @@
               tasks: tasks || [],
               summaries: summaries || [],
               leaves: leaves || [],
-              leave_requests: requests || [],
-              users: users || []
+              leave_requests: requests || []
             };
             
           } else if (action === 'get_all_users') {
             const users = await supabaseFetch('/users?select=*');
             return { success: true, users: users || [] };
-            
-          } else if (action === 'update_user_status') {
-            await supabaseFetch(`/users?username=eq.${arg.username}`, {
-              method: 'PATCH',
-              body: JSON.stringify({ status: arg.status })
-            });
-            return { success: true };
             
           } else if (action === 'manage_users') {
             const subAction = arg.sub_action;
@@ -1309,25 +1290,21 @@
             const orig = arg.orig_username || username;
             
             if (subAction === 'add') {
-              const existing = await supabaseFetch(`/users?username=eq.${username}`);
+              const existing = await supabaseFetch(`/users?username=ilike.${username}`);
               if (existing && existing.length > 0) {
                 return { success: false, error: "User already exists." };
               }
               await supabaseFetch('/users', {
                 method: 'POST',
-                body: JSON.stringify({ username, password, role, status: 'offline' })
+                body: JSON.stringify({ username, password, role })
               });
             } else if (subAction === 'edit') {
-              const patchData = { password, role };
-              if (username.toLowerCase() !== orig.toLowerCase()) {
-                patchData.username = username;
-              }
-              await supabaseFetch(`/users?username=eq.${orig}`, {
+              await supabaseFetch(`/users?username=ilike.${orig}`, {
                 method: 'PATCH',
-                body: JSON.stringify(patchData)
+                body: JSON.stringify({ username, password, role })
               });
             } else if (subAction === 'delete') {
-              await supabaseFetch(`/users?username=eq.${username}`, {
+              await supabaseFetch(`/users?username=ilike.${username}`, {
                 method: 'DELETE'
               });
             }
@@ -1380,10 +1357,7 @@
             
             await supabaseFetch(`/leave_requests?request_id=eq.${requestId}`, {
               method: 'PATCH',
-              body: JSON.stringify({ 
-                status, 
-                manager_comments: arg.manager_comments || null 
-              })
+              body: JSON.stringify({ status })
             });
             
             if (status === 'approved') {
@@ -1773,11 +1747,6 @@
     async function loadEmployeeData() {
       document.querySelectorAll('.employee-name').forEach(el => el.innerText = state.currentUser.username);
       
-      const statusSelect = document.getElementById('user-status-select');
-      if (statusSelect && state.currentUser) {
-        statusSelect.value = state.currentUser.status || 'offline';
-      }
-      
       // Clear inputs
       document.getElementById('leave-start-date').value = '';
       document.getElementById('leave-end-date').value = '';
@@ -1814,25 +1783,6 @@
       } else {
         console.error("Error loading tasks:", res.error);
       }
-    }
-
-    async function updateUserStatus(status) {
-      if (!state.currentUser) return;
-      state.currentUser.status = status;
-      
-      const session = JSON.parse(localStorage.getItem('pf_session') || '{}');
-      if (session.user) {
-        session.user.status = status;
-        localStorage.setItem('pf_session', JSON.stringify(session));
-      }
-      
-      toggleLoader(true);
-      await callPython('api_request', {
-        action: 'update_user_status',
-        username: state.currentUser.username,
-        status: status
-      });
-      toggleLoader(false);
     }
 
     // Update Attendance checkin checkout buttons
@@ -1891,24 +1841,9 @@
       if (res && res.success) {
         state.attendance = res.attendance;
         
-        // Auto-update status to online/offline
-        const newStatus = type === 'login' ? 'online' : 'offline';
-        if (state.currentUser) {
-          state.currentUser.status = newStatus;
-          const selectEl = document.getElementById('user-status-select');
-          if (selectEl) selectEl.value = newStatus;
-          // Background sync status update
-          callPython('api_request', {
-            action: 'update_user_status',
-            username: state.currentUser.username,
-            status: newStatus
-          });
-        }
-        
         // Update session storage
         const session = JSON.parse(localStorage.getItem('pf_session') || '{}');
         session.attendance = res.attendance;
-        if (state.currentUser) session.user = state.currentUser;
         localStorage.setItem('pf_session', JSON.stringify(session));
         
         if (type === 'logout') {
@@ -2500,7 +2435,7 @@
       // Get unique registered users, ensuring defaults are present
       const allUsers = [...new Set([
         ...logs.map(l => l.username.toLowerCase()),
-        'edyn', 'soumita', 'anurag', 'nishant', 'sai', 'hana', 'mohana'
+        'edyn', 'soumita', 'anurag', 'nishant', 'sai', 'hana'
       ])];
       
       allUsers.forEach(username => {
@@ -2559,26 +2494,13 @@
           `;
         }
         
-        const userObj = state.managerData.users ? state.managerData.users.find(usr => usr.username.toLowerCase() === username.toLowerCase()) : null;
-        const curStatus = userObj ? (userObj.status || 'offline') : 'offline';
-        let statusDotColor = 'bg-slate-300';
-        let statusLabel = 'offline';
-        if (curStatus === 'online') {
-          statusDotColor = 'bg-green-500 animate-pulse';
-          statusLabel = 'online';
-        } else if (curStatus === 'away') {
-          statusDotColor = 'bg-yellow-500';
-          statusLabel = 'away';
-        }
-        
         const card = document.createElement('div');
         card.className = "bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-between space-y-3";
         card.innerHTML = `
           <div class="flex items-center justify-between border-b border-slate-100 pb-2">
             <h4 class="font-bold text-slate-800 capitalize text-xs flex items-center">
-              <span class="h-2 w-2 rounded-full mr-2 ${statusDotColor}" title="${statusLabel}"></span>
+              <span class="h-2 w-2 rounded-full mr-2 ${userLog ? (userLog.logout_time === '' ? 'bg-green-500 animate-pulse' : 'bg-brandBlue') : 'bg-slate-300'}"></span>
               ${username}
-              <span class="text-[9px] text-slate-400 font-bold ml-1.5 lowercase">(${statusLabel})</span>
             </h4>
             <span class="text-[9px] text-slate-400 font-bold uppercase">${selectedDate}</span>
           </div>
@@ -2744,7 +2666,7 @@
       // Get unique users from system
       const allUsers = [...new Set([
         ...logs.map(l => l.username.toLowerCase()),
-        'edyn', 'soumita', 'anurag', 'nishant', 'sai', 'hana', 'mohana'
+        'edyn', 'soumita', 'anurag', 'nishant', 'sai', 'hana'
       ])];
       
       allUsers.forEach(username => {
@@ -2948,9 +2870,8 @@
             <td class="py-2.5 pr-4">${r.start_date} to ${r.end_date}</td>
             <td class="py-2.5 px-4 capitalize">${r.leave_type}</td>
             <td class="py-2.5 px-4 text-slate-500">${r.reason || '-'}</td>
-            <td class="py-2.5 px-4 font-semibold">
+            <td class="py-2.5 px-4">
               <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badgeColor} capitalize">${r.status}</span>
-              ${r.manager_comments ? `<div class="text-[10px] text-slate-400 mt-1 italic font-medium">Msg: "${r.manager_comments}"</div>` : ''}
             </td>
             <td class="py-2.5 pl-4 text-right text-[10px] text-slate-400">${r.created_at.split(' ')[0]}</td>
           `;
@@ -3026,17 +2947,12 @@
           let actionButtons = '';
           if (r.status === 'pending') {
             actionButtons = `
-              <div class="flex flex-col space-y-1.5 items-end">
-                <input type="text" id="comment-${r.request_id}" placeholder="Message (optional)..." class="px-2 py-1 text-[10px] border border-slate-200 rounded-lg w-full max-w-[130px] focus:outline-none focus:ring-1 focus:ring-brandPurple bg-white">
-                <div class="flex space-x-1">
-                  <button onclick="processLeaveRequest('${r.request_id}', 'approved')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold rounded-lg transition">
-                    Approve
-                  </button>
-                  <button onclick="processLeaveRequest('${r.request_id}', 'rejected')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold rounded-lg transition">
-                    Reject
-                  </button>
-                </div>
-              </div>
+              <button onclick="processLeaveRequest('${r.request_id}', 'approved')" class="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold rounded-lg transition mr-1">
+                Approve
+              </button>
+              <button onclick="processLeaveRequest('${r.request_id}', 'rejected')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold rounded-lg transition">
+                Reject
+              </button>
             `;
           } else {
             actionButtons = `<span class="text-[10px] text-slate-400 italic">Processed</span>`;
@@ -3051,7 +2967,6 @@
             <td class="py-3 px-4 text-slate-500">${r.reason || '-'}</td>
             <td class="py-3 px-4">
               <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badgeColor} capitalize">${r.status}</span>
-              ${r.manager_comments ? `<div class="text-[10px] text-slate-400 mt-1 italic max-w-[140px] break-words">Msg: "${r.manager_comments}"</div>` : ''}
             </td>
             <td class="py-3 pl-4 text-right space-x-1">${actionButtons}</td>
           `;
@@ -3065,15 +2980,11 @@
         return;
       }
       
-      const commentInput = document.getElementById(`comment-${requestId}`);
-      const commentVal = commentInput ? commentInput.value.trim() : '';
-      
       toggleLoader(true);
       const res = await callPython('api_request', {
         action: 'update_leave_request_status',
         request_id: requestId,
-        status: newStatus,
-        manager_comments: commentVal
+        status: newStatus
       });
       toggleLoader(false);
       
