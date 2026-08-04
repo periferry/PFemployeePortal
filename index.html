@@ -3442,6 +3442,25 @@
           
           state.configUrl = 'https://script.google.com/macros/s/AKfycbzdN_JoCmrwDbM_9Bi7XU84kKIdGz2sMCK8gDIPev4jR58WDZvn0PddRDIkZ13LNQQW0w/exec';
           handlePostLoginNavigation();
+          
+          // Background sync user roles directly from Supabase to prevent stale session caching
+          supabaseFetch(`/users?username=eq.${state.currentUser.username}`).then(users => {
+            if (users && users.length > 0) {
+              const dbUser = users[0];
+              const oldRole = state.currentUser.role;
+              state.currentUser.role = dbUser.role;
+              
+              if (oldRole !== dbUser.role) {
+                const updatedSession = JSON.parse(localStorage.getItem('pf_session') || '{}');
+                if (updatedSession.user) {
+                  updatedSession.user.role = dbUser.role;
+                  localStorage.setItem('pf_session', JSON.stringify(updatedSession));
+                }
+                handlePostLoginNavigation();
+              }
+            }
+          }).catch(err => console.error("Session roles sync failed:", err));
+          
           return;
         } catch (e) {
           localStorage.removeItem('pf_session');
