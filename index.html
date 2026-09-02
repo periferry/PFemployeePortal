@@ -274,7 +274,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
-            <input type="password" id="login-password" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent text-sm transition duration-200">
+            <input type="password" id="login-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent text-sm transition duration-200">
           </div>
           
           <!-- Error message container -->
@@ -304,7 +304,7 @@
       <!-- Welcome & Action Summary Bar -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 premium-glass p-5 rounded-2xl">
         <div>
-          <h2 class="text-xl font-bold text-slate-800">Hello, <span class="employee-name text-brandBlue">Employee</span> 👋</h2>
+          <h2 class="text-xl font-bold text-slate-800">Hello, <span class="employee-name text-brandBlue">Employee</span> ðŸ‘‹</h2>
           <p class="text-xs text-slate-500 mt-0.5">Let's log your attendance and organize your daily plan.</p>
         </div>
         <!-- Status & Log buttons -->
@@ -826,7 +826,7 @@
                 <th class="pb-3 pr-4">Username</th>
                 <th class="pb-3 px-4">Password</th>
                 <th class="pb-3 px-4">Roles</th>
-                <th class="pb-3 pl-4 text-right">Actions</th>
+                <th class="pb-3 pl-4 text-right">Status</th>
               </tr>
             </thead>
             <tbody id="dev-user-rows" class="text-sm font-medium text-slate-700 divide-y divide-slate-100">
@@ -1082,25 +1082,27 @@
       return text ? JSON.parse(text) : null;
     }
 
-    // Call Python backend wrapper safely (or direct browser fetch when hosted on web)
+    // Call Python backend wrapper safely & maintain real-time Dual-Sync with Supabase + Google Sheets
     async function callPython(method, arg = null) {
-      if (window.pywebview && window.pywebview.api && window.pywebview.api[method]) {
-        try {
-          const res = await window.pywebview.api[method](arg);
-          return typeof res === 'string' ? JSON.parse(res) : res;
-        } catch (e) {
-          console.error("Error calling Python method:", method, e);
-          return { success: false, error: e.message || e.toString() };
-        }
-      } else if (method === 'get_config') {
+      if (method === 'get_config') {
         const stored = localStorage.getItem('pf_sb_url');
         const defaultUrl = 'https://oijgqcmdofvicworgeir.supabase.co';
         return { success: true, url: stored || defaultUrl };
       } else if (method === 'save_config') {
         localStorage.setItem('pf_sb_url', arg);
         state.supabaseUrl = arg;
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.save_config) {
+          window.pywebview.api.save_config(arg).catch(() => {});
+        }
         return { success: true };
       } else if (method === 'api_request') {
+        // In PyWebView desktop mode, mirror updates in the background to Google Sheets
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.api_request) {
+          window.pywebview.api.api_request(arg).catch(err => {
+            console.warn("Background Google Sheets sync:", err);
+          });
+        }
+        
         const action = arg.action;
         try {
           if (action === 'login') {
@@ -1263,9 +1265,9 @@
             return { success: true };
             
           } else if (action === 'get_manager_data') {
-            const logs = await supabaseFetch('/time_logs?select=*');
-            const tasks = await supabaseFetch('/tasks?select=*');
-            const summaries = await supabaseFetch('/daily_summaries?select=*');
+            const logs = await supabaseFetch('/time_logs?select=*&order=date.desc');
+            const tasks = await supabaseFetch('/tasks?select=*&order=date.desc');
+            const summaries = await supabaseFetch('/daily_summaries?select=*&order=date.desc');
             const leaves = await supabaseFetch('/leaves?select=*');
             const requests = await supabaseFetch('/leave_requests?select=*');
             
@@ -2074,19 +2076,19 @@
       let text = `Daily Summary - ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n`;
       
       if (completedTasks.length > 0) {
-        text += `✅ Completed Tasks:\n`;
+        text += `âœ… Completed Tasks:\n`;
         completedTasks.forEach((t, i) => text += `${i+1}. ${t.title}\n`);
         text += `\n`;
       }
       
       if (inprogressTasks.length > 0) {
-        text += `⏳ In Progress Tasks:\n`;
+        text += `â³ In Progress Tasks:\n`;
         inprogressTasks.forEach((t, i) => text += `${i+1}. ${t.title}\n`);
         text += `\n`;
       }
       
       if (todoTasks.length > 0) {
-        text += `📋 Remaining Tasks (Pending):\n`;
+        text += `ðŸ“‹ Remaining Tasks (Pending):\n`;
         todoTasks.forEach((t, i) => text += `${i+1}. ${t.title}\n`);
       }
       
@@ -2159,22 +2161,37 @@
     }
 
     function renderAttendanceStats() {
-      const logs = state.managerData.time_logs;
+      const logs = state.managerData.time_logs || [];
       const today = getLocalDateString();
       
-      // Filter today's attendance logs
-      const todayLogs = logs.filter(l => l.date === today);
+      // Filter today's attendance logs (matching YYYY-MM-DD)
+      const todayLogs = logs.filter(l => {
+        if (!l || !l.date) return false;
+        const d = (l.date.includes('T') ? l.date.split('T')[0] : l.date).trim();
+        return d === today;
+      });
       
-      // Checked in: logout_time is empty
-      const activeCount = todayLogs.filter(l => l.logout_time === '').length;
-      const completeCount = todayLogs.filter(l => l.logout_time !== '').length;
+      // Checked in: has login_time and logout_time is empty/null
+      const activeCount = todayLogs.filter(l => {
+        const isLoggedOut = (l.logout_time !== null && l.logout_time !== undefined && l.logout_time.toString().trim() !== '' && l.logout_time !== '--:--:--');
+        return !isLoggedOut && Boolean(l.login_time);
+      }).length;
       
-      // Calculate total unique employees in sheets
-      const uniqueEmployees = [...new Set(logs.map(l => l.username.toLowerCase()))];
+      const completeCount = todayLogs.filter(l => {
+        const isLoggedOut = (l.logout_time !== null && l.logout_time !== undefined && l.logout_time.toString().trim() !== '' && l.logout_time !== '--:--:--');
+        return isLoggedOut;
+      }).length;
+      
+      // Total registered count from user database
+      let totalUsersCount = (state.devUsers && state.devUsers.length > 0) ? state.devUsers.length : 0;
+      if (totalUsersCount === 0) {
+        const uniqueEmployees = [...new Set(logs.map(l => (l.username || '').toLowerCase().trim()).filter(Boolean))];
+        totalUsersCount = Math.max(uniqueEmployees.length, 9);
+      }
       
       document.getElementById('stat-active-count').innerText = activeCount;
       document.getElementById('stat-logged-out-count').innerText = completeCount;
-      document.getElementById('stat-total-count').innerText = Math.max(uniqueEmployees.length, 6); // default to at least 6 default users
+      document.getElementById('stat-total-count').innerText = totalUsersCount;
     }
 
     function renderWeeklyHoursChart() {
@@ -2195,8 +2212,10 @@
       const data = Object.values(employeeHours);
       
       // If no data, use some default brand guidelines names for mockup
-      const chartLabels = labels.length > 0 ? labels : ['edyn', 'soumita', 'anurag', 'nishant', 'sai'];
-      const chartData = data.length > 0 ? data : [8.5, 7.2, 9.0, 8.0, 6.5];
+      const chartLabels = labels.length > 0 
+        ? labels.filter(u => u.toLowerCase() !== 'hana' && u.toLowerCase() !== 'sai') 
+        : ['edyn', 'soumita', 'anurag', 'nishant', 'sreedha', 'manohar'];
+      const chartData = data.length > 0 ? data : [8.5, 7.2, 9.0, 8.0, 6.5, 7.0];
       
       const ctx = document.getElementById('hoursChart').getContext('2d');
       
@@ -2318,13 +2337,35 @@
       const tbody = document.getElementById('mgr-attendance-rows');
       tbody.innerHTML = '';
       
-      let logs = [...state.managerData.time_logs];
+      // Safely parse timestamps for accurate date-wise ordering
+      function getLogTimestamp(log) {
+        if (!log) return 0;
+        if (log.login_time && (log.login_time.includes('T') || log.login_time.includes('-'))) {
+          const t = new Date(log.login_time).getTime();
+          if (!isNaN(t)) return t;
+        }
+        if (log.date) {
+          let timePart = '00:00:00';
+          if (log.login_time && log.login_time.includes(':')) {
+            const m = log.login_time.match(/\d{2}:\d{2}:\d{2}/);
+            if (m) timePart = m[0];
+            else if (log.login_time.length <= 8) timePart = log.login_time;
+          }
+          const t = new Date(log.date + 'T' + timePart).getTime();
+          if (!isNaN(t)) return t;
+          const dOnly = new Date(log.date).getTime();
+          if (!isNaN(dOnly)) return dOnly;
+        }
+        return 0;
+      }
       
-      // Sort logs by date and login time
+      let logs = [...state.managerData.time_logs].filter(l => l && l.username && l.username.toLowerCase() !== 'hana' && l.username.toLowerCase() !== 'sai');
+      
+      // Sort logs strictly by date and login time
       logs.sort((a, b) => {
-        const dateA = new Date(a.date + 'T' + (a.login_time || '00:00:00'));
-        const dateB = new Date(b.date + 'T' + (b.login_time || '00:00:00'));
-        return state.mgrAttendanceSortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+        const timeA = getLogTimestamp(a);
+        const timeB = getLogTimestamp(b);
+        return state.mgrAttendanceSortOrder === 'desc' ? timeB - timeA : timeA - timeB;
       });
       
       if (logs.length === 0) {
@@ -2337,7 +2378,8 @@
       }
       
       logs.forEach(log => {
-        const isCheckedIn = log.logout_time === '';
+        const isLoggedOut = (log.logout_time !== null && log.logout_time !== undefined && log.logout_time.toString().trim() !== '' && log.logout_time !== '--:--:--');
+        const isCheckedIn = !isLoggedOut && Boolean(log.login_time);
         const statusBadge = isCheckedIn 
           ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-600 border border-green-100 animate-pulse">Active</span>`
           : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500">Offline</span>`;
@@ -2430,13 +2472,19 @@
       const container = document.getElementById('mgr-timeline-sheet');
       container.innerHTML = '';
       
-      const logs = state.managerData.time_logs;
+      const logs = (state.managerData.time_logs || []).filter(l => l && l.username && l.username.toLowerCase() !== 'hana' && l.username.toLowerCase() !== 'sai');
       
-      // Get unique registered users, ensuring defaults are present
+      const defaultUsers = ['edyn', 'soumita', 'anurag', 'nishant', 'sreedha', 'manohar', 'mohana'];
+      const devUsersList = (state.devUsers && state.devUsers.length > 0)
+        ? state.devUsers.map(u => u.username.trim().toLowerCase())
+        : [];
+        
+      // Get unique registered users, ensuring old employees are excluded
       const allUsers = [...new Set([
-        ...logs.map(l => l.username.toLowerCase()),
-        'edyn', 'soumita', 'anurag', 'nishant', 'sai', 'hana', 'mohana'
-      ])];
+        ...defaultUsers,
+        ...devUsersList,
+        ...logs.map(l => l.username.toLowerCase())
+      ])].filter(u => u !== 'hana' && u !== 'sai');
       
       allUsers.forEach(username => {
         // Find log for this user on the selected date
@@ -2459,7 +2507,8 @@
           const endPct = (logoutDec / 24) * 100;
           const widthPct = Math.max(endPct - startPct, 1.5); // Minimum 1.5% width for visibility
           
-          const isActive = logout === '';
+          const isLoggedOut = (logout !== null && logout !== undefined && logout.toString().trim() !== '' && logout !== '--:--:--');
+          const isActive = !isLoggedOut && Boolean(login);
           const barColorClass = isActive ? 'brand-gradient animate-pulse' : 'bg-brandBlue';
           
           barHtml = `
@@ -2517,17 +2566,22 @@
       if (!select) return;
       select.innerHTML = '';
       
-      const defaultUsers = ['edyn', 'soumita', 'sai', 'anurag', 'nishant', 'hana'];
+      const defaultUsers = ['edyn', 'soumita', 'anurag', 'nishant', 'sreedha', 'manohar', 'mohana'];
       
-      // Get unique employees from tasks safely and merge with default users
+      // Get unique employees from tasks safely and merge with active users
       const taskUsers = state.managerData.tasks
         ? state.managerData.tasks.filter(t => t && t.username).map(t => t.username.trim().toLowerCase())
         : [];
         
+      const devUsersList = (state.devUsers && state.devUsers.length > 0)
+        ? state.devUsers.map(u => u.username.trim().toLowerCase())
+        : [];
+        
       const users = [...new Set([
         ...defaultUsers,
+        ...devUsersList,
         ...taskUsers
-      ])];
+      ])].filter(u => u !== 'hana' && u !== 'sai');
       
       users.forEach(u => {
         const opt = document.createElement('option');
@@ -2662,12 +2716,18 @@
       const tbody = document.getElementById('mgr-leaves-rows');
       tbody.innerHTML = '';
       
-      const logs = state.managerData.time_logs;
-      // Get unique users from system
+      const logs = (state.managerData.time_logs || []).filter(l => l && l.username && l.username.toLowerCase() !== 'hana' && l.username.toLowerCase() !== 'sai');
+      const defaultUsers = ['edyn', 'soumita', 'anurag', 'nishant', 'sreedha', 'manohar', 'mohana'];
+      const devUsersList = (state.devUsers && state.devUsers.length > 0)
+        ? state.devUsers.map(u => u.username.trim().toLowerCase())
+        : [];
+        
+      // Get unique users from system, excluding removed employees
       const allUsers = [...new Set([
-        ...logs.map(l => l.username.toLowerCase()),
-        'edyn', 'soumita', 'anurag', 'nishant', 'sai', 'hana', 'mohana'
-      ])];
+        ...defaultUsers,
+        ...devUsersList,
+        ...logs.map(l => l.username.toLowerCase())
+      ])].filter(u => u !== 'hana' && u !== 'sai');
       
       allUsers.forEach(username => {
         // Find leaves log for this user for the selected month
@@ -3076,25 +3136,16 @@
           <td class="py-3.5 pr-4 font-bold text-slate-800">${u.username}</td>
           <td class="py-3.5 px-4 font-mono text-xs text-slate-500">${u.password}</td>
           <td class="py-3.5 px-4">${roleBadges}</td>
-          <td class="py-3.5 pl-4 text-right space-x-1">
-            <button onclick="openUserModal('${u.username}')" class="p-1.5 text-slate-400 hover:text-brandBlue hover:bg-slate-100 rounded-lg transition" title="Edit credentials">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
-            <button onclick="deleteUser('${u.username}')" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition" title="Delete employee">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
+          <td class="py-3.5 pl-4 text-right">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-50 text-green-600 border border-green-100">Active</span>
           </td>
         `;
         tbody.appendChild(row);
       });
     }
 
-    // DEVELOPER USERS MODAL INTERFACE
-    function openUserModal(username = null) {
+    // DEVELOPER USERS MODAL INTERFACE (ADD ONLY)
+    function openUserModal() {
       const modal = document.getElementById('modal-user');
       const title = document.getElementById('user-modal-title');
       const inputUsername = document.getElementById('user-modal-username');
@@ -3113,30 +3164,10 @@
       cbManager.checked = false;
       cbDeveloper.checked = false;
       
-      if (username) {
-        title.innerText = "Edit User Settings";
-        const u = state.devUsers.find(usr => usr.username && usr.username.toLowerCase() === username.toLowerCase());
-        
-        if (u) {
-          inputUsername.value = u.username;
-          inputPassword.value = u.password;
-          origUsername.value = u.username;
-          
-          const roles = (u.role || "").split(',').map(r => r.trim());
-          cbManager.checked = roles.includes('manager');
-          cbDeveloper.checked = roles.includes('developer');
-        } else {
-          console.error("User not found in state:", username);
-          inputUsername.value = username;
-          inputPassword.value = '';
-          origUsername.value = username;
-        }
-      } else {
-        title.innerText = "Add New User";
-        inputUsername.value = '';
-        inputPassword.value = '';
-        origUsername.value = '';
-      }
+      title.innerText = "Add New User";
+      inputUsername.value = '';
+      inputPassword.value = '';
+      origUsername.value = '';
       
       modal.classList.remove('hidden');
     }
@@ -3148,7 +3179,6 @@
     async function submitUserForm() {
       const username = document.getElementById('user-modal-username').value.trim();
       const password = document.getElementById('user-modal-password').value.trim();
-      const origUsername = document.getElementById('user-modal-orig-username').value.trim();
       const errDiv = document.getElementById('user-modal-error');
       
       errDiv.classList.add('hidden');
@@ -3164,16 +3194,13 @@
       if (document.getElementById('role-cb-manager').checked) roles.push('manager');
       if (document.getElementById('role-cb-developer').checked) roles.push('developer');
       
-      const subAction = origUsername ? 'edit' : 'add';
-      
       toggleLoader(true);
       const res = await callPython('api_request', {
         action: 'manage_users',
-        sub_action: subAction,
+        sub_action: 'add',
         username: username,
         password: password,
-        role: roles.join(','),
-        orig_username: origUsername
+        role: roles.join(',')
       });
       toggleLoader(false);
       
@@ -3182,37 +3209,14 @@
         loadDeveloperData(); // Reload grid
       } else {
         alert("Server error details: " + (res ? res.error || JSON.stringify(res) : "No response"));
-        errDiv.innerText = (res && res.error) ? res.error : "Failed to save user configuration.";
+        errDiv.innerText = (res && res.error) ? res.error : "Failed to add user configuration.";
         errDiv.classList.remove('hidden');
       }
     }
 
     async function deleteUser(username) {
-      if (username.toLowerCase() === 'hana') {
-        alert("Security restriction: Hana is the lead developer/owner and cannot be deleted.");
-        return;
-      }
-      if (state.currentUser && state.currentUser.username.toLowerCase() === username.toLowerCase()) {
-        alert("Security restriction: You cannot delete your own active administrator account.");
-        return;
-      }
-      if (!confirm(`Are you sure you want to permanently remove employee user: "${username}"?`)) {
-        return;
-      }
-      
-      toggleLoader(true);
-      const res = await callPython('api_request', {
-        action: 'manage_users',
-        sub_action: 'delete',
-        username: username
-      });
-      toggleLoader(false);
-      
-      if (res && res.success) {
-        loadDeveloperData();
-      } else {
-        alert("Error deleting user: " + (res.error || "Server issue"));
-      }
+      alert("Permission restriction: User deletion is disabled from the developer panel.");
+      return;
     }
 
     // ==================== LOCAL RUN MOCKS (TESTING) ====================
@@ -3245,10 +3249,10 @@
         users = [
           { username: "edyn", password: "edyn@pf", role: "employee" },
           { username: "anurag", password: "anurag@pf", role: "employee,manager" },
-          { username: "hana", password: "8376ti.ger3110", role: "employee,manager,developer" },
           { username: "soumita", password: "soumita@pf", role: "employee" },
           { username: "nishant", password: "nishant@pf", role: "employee,manager" },
-          { username: "sai", password: "sai@PF", role: "employee" }
+          { username: "sreedha", password: "Sreedha@pf", role: "employee,manager,developer" },
+          { username: "manohar", password: "Manohar@pf", role: "employee" }
         ];
         localStorage.setItem('mock_users', JSON.stringify(users));
       }
