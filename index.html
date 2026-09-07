@@ -304,7 +304,7 @@
       <!-- Welcome & Action Summary Bar -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 premium-glass p-5 rounded-2xl">
         <div>
-          <h2 class="text-xl font-bold text-slate-800">Hello, <span class="employee-name text-brandBlue">Employee</span> ðŸ‘‹</h2>
+          <h2 class="text-xl font-bold text-slate-800">Hello, <span class="employee-name text-brandBlue">Employee</span></h2>
           <p class="text-xs text-slate-500 mt-0.5">Let's log your attendance and organize your daily plan.</p>
         </div>
         <!-- Status & Log buttons -->
@@ -2098,7 +2098,7 @@
           renderKanbanBoard();
         } else {
           const targetFormatted = targetUser.charAt(0).toUpperCase() + targetUser.slice(1);
-          alert(`âœ… Successfully assigned ${titles.length} task(s) to ${targetFormatted}!`);
+          alert(`Successfully assigned ${titles.length} task(s) to ${targetFormatted}!`);
           if (state.managerData && state.managerData.tasks) {
             state.managerData.tasks = state.managerData.tasks.concat(res.added || []);
           }
@@ -2307,19 +2307,19 @@
       let text = `Daily Summary - ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n`;
       
       if (completedTasks.length > 0) {
-        text += `âœ… Completed Tasks:\n`;
+        text += `Completed Tasks:\n`;
         completedTasks.forEach((t, i) => text += `${i+1}. ${t.title}\n`);
         text += `\n`;
       }
       
       if (inprogressTasks.length > 0) {
-        text += `â³ In Progress Tasks:\n`;
+        text += `In Progress Tasks:\n`;
         inprogressTasks.forEach((t, i) => text += `${i+1}. ${t.title}\n`);
         text += `\n`;
       }
       
       if (todoTasks.length > 0) {
-        text += `ðŸ“‹ Remaining Tasks (Pending):\n`;
+        text += `Remaining Tasks (Pending):\n`;
         todoTasks.forEach((t, i) => text += `${i+1}. ${t.title}\n`);
       }
       
