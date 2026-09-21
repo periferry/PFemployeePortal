@@ -1351,16 +1351,34 @@
             
           } else if (action === 'save_leaves_bulk') {
             const updates = arg.updates || [];
-            await supabaseFetch('/leaves', {
-              method: 'POST',
-              body: JSON.stringify(updates.map(item => ({
-                username: item.username,
-                month: item.month,
-                casual_leaves: parseFloat(item.casual_leaves) || 0,
-                medical_leaves: parseFloat(item.medical_leaves) || 0
-              }))),
-              headers: { 'Prefer': 'resolution=merge-duplicates' }
-            });
+            for (let i = 0; i < updates.length; i++) {
+              const item = updates[i];
+              const u = (item.username || '').trim().toLowerCase();
+              const m = (item.month || '').trim();
+              const cl = parseFloat(item.casual_leaves) || 0;
+              const ml = parseFloat(item.medical_leaves) || 0;
+              
+              const existing = await supabaseFetch(`/leaves?username=ilike.${u}&month=eq.${m}`);
+              if (existing && existing.length > 0) {
+                await supabaseFetch(`/leaves?id=eq.${existing[0].id}`, {
+                  method: 'PATCH',
+                  body: JSON.stringify({
+                    casual_leaves: cl,
+                    medical_leaves: ml
+                  })
+                });
+              } else {
+                await supabaseFetch('/leaves', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    username: u,
+                    month: m,
+                    casual_leaves: cl,
+                    medical_leaves: ml
+                  })
+                });
+              }
+            }
             return { success: true };
             
           } else if (action === 'apply_leave') {
@@ -3226,11 +3244,28 @@
       toggleLoader(false);
       
       if (res && res.success) {
+        if (!state.managerData.leaves) state.managerData.leaves = [];
+        updates.forEach(up => {
+          let rec = state.managerData.leaves.find(l => l && l.username && l.username.toLowerCase() === up.username.toLowerCase() && l.month === up.month);
+          if (rec) {
+            rec.casual_leaves = up.casual_leaves;
+            rec.medical_leaves = up.medical_leaves;
+          } else {
+            state.managerData.leaves.push({
+              username: up.username.toLowerCase(),
+              month: up.month,
+              casual_leaves: up.casual_leaves,
+              medical_leaves: up.medical_leaves
+            });
+          }
+        });
+        
         state.unsavedLeaveChanges = {};
         updateLeavesSaveButtonState();
-        alert("Leave changes saved successfully!");
+        renderLeavesTracker();
+        alert("Leave changes saved and synced successfully!");
       } else {
-        alert("Failed to save leaves: " + (res.error || "Network error"));
+        alert("Failed to save leaves: " + (res && res.error ? res.error : "Network error"));
       }
     }
 
