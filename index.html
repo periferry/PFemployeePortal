@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PeriFerry Employee Portal </title>
+  <title>PeriFerry Employee Portal</title>
+  <!-- PeriFerry Official Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231f3c7e'/%3E%3Cstop offset='100%25' stop-color='%235046b6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Cpolygon points='35,16 68,58 22,58' fill='%23ffffff' opacity='0.95'/%3E%3Cpolygon points='68,32 82,58 68,58' fill='%23c8469e'/%3E%3Ccircle cx='76' cy='22' r='7' fill='%23ff6bb5'/%3E%3Cpath d='M14 70 Q 28 62, 42 70 T 70 70 T 88 70' fill='none' stroke='%23ffffff' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M18 80 Q 32 74, 46 80 T 74 80 T 86 80' fill='none' stroke='%2338bdf8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231f3c7e'/%3E%3Cstop offset='100%25' stop-color='%235046b6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Cpolygon points='35,16 68,58 22,58' fill='%23ffffff' opacity='0.95'/%3E%3Cpolygon points='68,32 82,58 68,58' fill='%23c8469e'/%3E%3Ccircle cx='76' cy='22' r='7' fill='%23ff6bb5'/%3E%3Cpath d='M14 70 Q 28 62, 42 70 T 70 70 T 88 70' fill='none' stroke='%23ffffff' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M18 80 Q 32 74, 46 80 T 74 80 T 86 80' fill='none' stroke='%2338bdf8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <!-- Google Fonts: Poppins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3032,6 +3035,41 @@
       });
     }
 
+    // Employee Joining Dates (accrual starts from joining month: 1 CL + 1 ML per month)
+    const USER_JOIN_DATES = {
+      'sreedha': '2026-08',
+      'anurag': '2026-07',
+      'soumita': '2026-07',
+      'nishant': '2026-07',
+      'edyn': '2026-07',
+      'manohar': '2026-07',
+      'mohana': '2026-07'
+    };
+
+    function getUserJoiningMonth(username) {
+      const u = (username || '').trim().toLowerCase();
+      
+      const devUser = (state.devUsers || []).find(usr => usr && usr.username && usr.username.toLowerCase() === u);
+      if (devUser && (devUser.join_date || devUser.joining_month)) {
+        return (devUser.join_date || devUser.joining_month).substring(0, 7);
+      }
+      
+      if (USER_JOIN_DATES[u]) {
+        return USER_JOIN_DATES[u];
+      }
+      
+      const userLogs = (state.managerData && state.managerData.time_logs ? state.managerData.time_logs : [])
+        .filter(l => l && l.username && l.username.toLowerCase() === u);
+      if (userLogs.length > 0) {
+        const dates = userLogs.map(l => l.date).filter(Boolean).sort();
+        if (dates.length > 0) {
+          return dates[0].substring(0, 7);
+        }
+      }
+      
+      return '2026-07';
+    }
+
     // MANAGER LEAVES TRACKER VIEWER
     function renderLeavesTracker() {
       const monthInput = document.getElementById('mgr-leaves-month');
@@ -3061,26 +3099,29 @@
       
       allUsers.forEach(username => {
         // Find leaves log for this user for the selected month
-        const record = state.managerData.leaves.find(l => l.username.toLowerCase() === username && l.month === selectedMonth);
+        const record = (state.managerData.leaves || []).find(l => l && l.username && l.username.toLowerCase() === username && l.month === selectedMonth);
         const clTaken = record ? parseFloat(record.casual_leaves) || 0 : 0;
         const mlTaken = record ? parseFloat(record.medical_leaves) || 0 : 0;
         
-        // Calculate accrued CL up to this month (accrual starts fresh from July 2026)
-        const startYear = 2026;
-        const startMonth = 7;
+        // Calculate accrued CL up to this month based on employee joining month (1.0 CL per month)
+        const joinMonthStr = getUserJoiningMonth(username);
+        const joinParts = joinMonthStr.split('-');
+        const startYear = parseInt(joinParts[0]) || 2026;
+        const startMonth = parseInt(joinParts[1]) || 7;
+        
         const yearDiff = parseInt(yearPart) - startYear;
         const monthDiff = monthIndex - startMonth;
         const totalMonths = (yearDiff * 12) + monthDiff + 1; // 1-based index
         const clAccrued = totalMonths > 0 ? totalMonths * 1.0 : 0;
         
-        // Sum up CL taken up to and including this month since July 2026 (carry forward)
-        const clTakenUpToNow = state.managerData.leaves
-          .filter(l => l.username.toLowerCase() === username)
+        // Sum up CL taken up to and including this month since joining month (carry forward)
+        const clTakenUpToNow = (state.managerData.leaves || [])
+          .filter(l => l && l.username && l.username.toLowerCase() === username)
           .filter(l => {
-            const lp = l.month.split('-');
+            const lp = (l.month || '').split('-');
             const ly = parseInt(lp[0]);
             const lm = parseInt(lp[1]) || 1;
-            // Only count months since July 2026 up to selected month
+            // Only count months from joining month up to selected month
             if (ly < startYear || (ly === startYear && lm < startMonth)) return false;
             return ly < parseInt(yearPart) || (ly === parseInt(yearPart) && lm <= monthIndex);
           })
@@ -3202,13 +3243,17 @@
     }
 
     function renderEmployeeLeavesDashboard() {
+      const username = state.currentUser ? state.currentUser.username.toLowerCase() : '';
       const currentMonth = getCurrentMonthString(); // YYYY-MM
       const parts = currentMonth.split('-');
       const yearPart = parts[0];
       const monthIndex = parseInt(parts[1]) || 1;
       
-      const startYear = 2026;
-      const startMonth = 7;
+      const joinMonthStr = getUserJoiningMonth(username);
+      const joinParts = joinMonthStr.split('-');
+      const startYear = parseInt(joinParts[0]) || 2026;
+      const startMonth = parseInt(joinParts[1]) || 7;
+      
       const yearDiff = parseInt(yearPart) - startYear;
       const monthDiff = monthIndex - startMonth;
       const totalMonths = (yearDiff * 12) + monthDiff + 1; // 1-based index
@@ -3216,7 +3261,7 @@
       
       const clTakenUpToNow = (state.userLeaves || [])
         .filter(l => {
-          const lp = l.month.split('-');
+          const lp = (l.month || '').split('-');
           const ly = parseInt(lp[0]);
           const lm = parseInt(lp[1]) || 1;
           if (ly < startYear || (ly === startYear && lm < startMonth)) return false;
