@@ -771,10 +771,15 @@
                 <label class="text-xs font-bold text-slate-600">Select Month:</label>
                 <input type="month" id="mgr-leaves-month" onchange="renderLeavesTracker()" class="px-4 py-1.5 text-xs border border-slate-200 focus:outline-none rounded-xl">
               </div>
-              <button id="btn-save-leaves" onclick="syncLeavesChanges()" class="px-4 py-2 bg-brandBlue hover:bg-brandBlue/90 text-white text-xs font-bold rounded-xl transition flex items-center shadow-md shadow-brandBlue/10 hidden">
+              <button id="btn-save-leaves" onclick="syncLeavesChanges()" disabled class="px-4 py-2 bg-slate-300 text-slate-500 text-xs font-bold rounded-xl transition flex items-center shadow-md cursor-not-allowed opacity-60">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-                Save Leave Changes (<span id="unsaved-leaves-count">0</span>)
+                <span id="btn-save-leaves-text">All Changes Saved</span>
+                <span id="unsaved-leaves-badge" class="ml-2 px-1.5 py-0.5 text-[10px] bg-white/20 rounded-full font-extrabold hidden">0</span>
               </button>
+              <div id="leave-sync-toast" class="hidden text-xs font-bold text-green-600 bg-green-50 border border-green-200 px-3 py-1.5 rounded-xl flex items-center">
+                <svg class="h-3.5 w-3.5 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                Saved & Synced!
+              </div>
             </div>
             <div class="text-xs text-slate-500 font-semibold leading-relaxed">
               * Note: Casual Leaves accrue at <span class="text-brandBlue font-bold">1.0 day/month</span> (remaining CL carries forward).<br>
@@ -1358,9 +1363,11 @@
               const cl = parseFloat(item.casual_leaves) || 0;
               const ml = parseFloat(item.medical_leaves) || 0;
               
+              if (!u || !m) continue;
+              
               const existing = await supabaseFetch(`/leaves?username=ilike.${u}&month=eq.${m}`);
               if (existing && existing.length > 0) {
-                await supabaseFetch(`/leaves?id=eq.${existing[0].id}`, {
+                await supabaseFetch(`/leaves?username=ilike.${u}&month=eq.${m}`, {
                   method: 'PATCH',
                   body: JSON.stringify({
                     casual_leaves: cl,
@@ -3059,14 +3066,16 @@
 
     // Employee Joining Dates (accrual starts from joining month: 1 CL + 1 ML per month)
     const USER_JOIN_DATES = {
-      'sreedha': '2026-08',
-      'anurag': '2026-07',
-      'soumita': '2026-07',
-      'nishant': '2026-07',
-      'edyn': '2026-07',
-      'manohar': '2026-07',
-      'mohana': '2026-07'
+      'anurag': '2026-04',   // Considered April 2026 (Start of FY 2026-27)
+      'soumita': '2026-06',  // Joined June 2026
+      'edyn': '2026-07',     // Joined July 2026
+      'edlyn': '2026-07',    // Joined July 2026
+      'sreedha': '2026-08',  // Joined August 2026
+      'manohar': '2026-08'   // Joined August 2026
     };
+
+    const EXCLUDED_LEAVE_USERS = ['hana', 'sai', 'mohana', 'nishant', 'asiery', 'asir'];
+    const DEFAULT_LEAVE_USERS = ['anurag', 'soumita', 'edyn', 'sreedha', 'manohar'];
 
     function getUserJoiningMonth(username) {
       const u = (username || '').trim().toLowerCase();
@@ -3092,129 +3101,25 @@
       return '2026-07';
     }
 
-    // MANAGER LEAVES TRACKER VIEWER
-    function renderLeavesTracker() {
-      const monthInput = document.getElementById('mgr-leaves-month');
-      if (!monthInput.value) {
-        monthInput.value = getCurrentMonthString();
-      }
-      const selectedMonth = monthInput.value; // YYYY-MM
-      const parts = selectedMonth.split('-');
+    function calculateEmployeeLeaveBalances(username, month) {
+      const u = (username || '').trim().toLowerCase();
+      const parts = (month || getCurrentMonthString()).split('-');
       const yearPart = parts[0];
       const monthIndex = parseInt(parts[1]) || 1;
       
-      const tbody = document.getElementById('mgr-leaves-rows');
-      tbody.innerHTML = '';
-      
-      const logs = (state.managerData.time_logs || []).filter(l => l && l.username && l.username.toLowerCase() !== 'hana' && l.username.toLowerCase() !== 'sai');
-      const defaultUsers = ['edyn', 'soumita', 'anurag', 'nishant', 'sreedha', 'manohar', 'mohana'];
-      const devUsersList = (state.devUsers && state.devUsers.length > 0)
-        ? state.devUsers.map(u => u.username.trim().toLowerCase())
-        : [];
-        
-      // Get unique users from system, excluding removed employees
-      const allUsers = [...new Set([
-        ...defaultUsers,
-        ...devUsersList,
-        ...logs.map(l => l.username.toLowerCase())
-      ])].filter(u => u !== 'hana' && u !== 'sai');
-      
-      allUsers.forEach(username => {
-        // Find leaves log for this user for the selected month
-        const record = (state.managerData.leaves || []).find(l => l && l.username && l.username.toLowerCase() === username && l.month === selectedMonth);
-        const clTaken = record ? parseFloat(record.casual_leaves) || 0 : 0;
-        const mlTaken = record ? parseFloat(record.medical_leaves) || 0 : 0;
-        
-        // Calculate accrued CL up to this month based on employee joining month (1.0 CL per month)
-        const joinMonthStr = getUserJoiningMonth(username);
-        const joinParts = joinMonthStr.split('-');
-        const startYear = parseInt(joinParts[0]) || 2026;
-        const startMonth = parseInt(joinParts[1]) || 7;
-        
-        const yearDiff = parseInt(yearPart) - startYear;
-        const monthDiff = monthIndex - startMonth;
-        const totalMonths = (yearDiff * 12) + monthDiff + 1; // 1-based index
-        const clAccrued = totalMonths > 0 ? totalMonths * 1.0 : 0;
-        
-        const clTakenPrior = (state.managerData.leaves || [])
-          .filter(l => l && l.username && l.username.toLowerCase() === username)
-          .filter(l => {
-            const lp = (l.month || '').split('-');
-            const ly = parseInt(lp[0]);
-            const lm = parseInt(lp[1]) || 1;
-            if (ly < startYear || (ly === startYear && lm < startMonth)) return false;
-            return ly < parseInt(yearPart) || (ly === parseInt(yearPart) && lm < monthIndex);
-          })
-          .reduce((sum, l) => sum + (parseFloat(l.casual_leaves) || 0), 0);
-          
-        const remainingCL = Math.max(0, clAccrued - clTakenPrior - clTaken);
-        const remainingML = Math.max(0, 1.0 - mlTaken);
-        
-        const row = document.createElement('tr');
-        row.className = "border-b border-slate-50 hover:bg-slate-50/50 transition fade-in";
-        row.innerHTML = `
-          <td class="py-3.5 pr-4 font-bold text-slate-800 capitalize flex items-center">
-            <span class="h-1.5 w-1.5 rounded-full bg-brandBlue mr-2"></span>
-            ${username}
-          </td>
-          
-          <td class="py-3.5 px-4 text-center">
-            <div class="inline-flex items-center space-x-1.5 bg-slate-100/70 border border-slate-200/60 px-2 py-1 rounded-xl">
-              <button onclick="updateEmployeeLeaves('${username}', 'casual_taken', -0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition">-</button>
-              <input type="number" step="0.5" min="0" value="${clTaken.toFixed(1)}" onchange="setEmployeeLeaveDirect('${username}', 'casual_taken', this.value)" class="w-14 text-center text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-brandBlue">
-              <button onclick="updateEmployeeLeaves('${username}', 'casual_taken', 0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition">+</button>
-            </div>
-          </td>
-          
-          <td class="py-3.5 px-4 text-center">
-            <div class="inline-flex items-center space-x-1.5 bg-slate-100/70 border border-slate-200/60 px-2 py-1 rounded-xl">
-              <button onclick="updateEmployeeLeaves('${username}', 'medical_taken', -0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition">-</button>
-              <input type="number" step="0.5" min="0" value="${mlTaken.toFixed(1)}" onchange="setEmployeeLeaveDirect('${username}', 'medical_taken', this.value)" class="w-14 text-center text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-brandBlue">
-              <button onclick="updateEmployeeLeaves('${username}', 'medical_taken', 0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition">+</button>
-            </div>
-          </td>
-          
-          <td class="py-3.5 px-4 text-center bg-blue-50/30">
-            <div class="inline-flex items-center space-x-1.5 bg-blue-100/60 border border-blue-200/60 px-2 py-1 rounded-xl">
-              <button onclick="updateEmployeeLeaves('${username}', 'remaining_cl', -0.5)" class="h-5 w-5 rounded-md hover:bg-blue-200 text-brandBlue font-extrabold flex items-center justify-center transition">-</button>
-              <input type="number" step="0.5" min="0" value="${remainingCL.toFixed(1)}" onchange="setEmployeeLeaveDirect('${username}', 'remaining_cl', this.value)" class="w-14 text-center text-xs font-bold text-brandBlue bg-white border border-blue-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-brandBlue">
-              <button onclick="updateEmployeeLeaves('${username}', 'remaining_cl', 0.5)" class="h-5 w-5 rounded-md hover:bg-blue-200 text-brandBlue font-extrabold flex items-center justify-center transition">+</button>
-            </div>
-          </td>
-          
-          <td class="py-3.5 pl-4 text-center bg-purple-50/30">
-            <div class="inline-flex items-center space-x-1.5 bg-purple-100/60 border border-purple-200/60 px-2 py-1 rounded-xl">
-              <button onclick="updateEmployeeLeaves('${username}', 'remaining_ml', -0.5)" class="h-5 w-5 rounded-md hover:bg-purple-200 text-brandPurple font-extrabold flex items-center justify-center transition">-</button>
-              <input type="number" step="0.5" min="0" max="1" value="${remainingML.toFixed(1)}" onchange="setEmployeeLeaveDirect('${username}', 'remaining_ml', this.value)" class="w-14 text-center text-xs font-bold text-brandPurple bg-white border border-purple-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-brandPurple">
-              <button onclick="updateEmployeeLeaves('${username}', 'remaining_ml', 0.5)" class="h-5 w-5 rounded-md hover:bg-purple-200 text-brandPurple font-extrabold flex items-center justify-center transition">+</button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-      updateLeavesSaveButtonState();
-    }
-
-    function updateEmployeeLeaves(username, actionType, change) {
-      const month = document.getElementById('mgr-leaves-month').value || getCurrentMonthString();
-      const userKey = username.toLowerCase();
-      const parts = month.split('-');
-      const yearPart = parts[0];
-      const monthIndex = parseInt(parts[1]) || 1;
-      
-      const joinMonthStr = getUserJoiningMonth(userKey);
+      const joinMonthStr = getUserJoiningMonth(u);
       const joinParts = joinMonthStr.split('-');
       const startYear = parseInt(joinParts[0]) || 2026;
       const startMonth = parseInt(joinParts[1]) || 7;
       
       const yearDiff = parseInt(yearPart) - startYear;
       const monthDiff = monthIndex - startMonth;
-      const totalMonths = (yearDiff * 12) + monthDiff + 1;
+      const totalMonths = (yearDiff * 12) + monthDiff + 1; // 1-based index
       const clAccrued = totalMonths > 0 ? totalMonths * 1.0 : 0;
       
-      // Sum up CL taken in prior months
+      // Sum up CL taken in prior months (strictly between joining month and selected month)
       const clTakenPrior = (state.managerData.leaves || [])
-        .filter(l => l && l.username && l.username.toLowerCase() === userKey)
+        .filter(l => l && l.username && l.username.toLowerCase() === u)
         .filter(l => {
           const lp = (l.month || '').split('-');
           const ly = parseInt(lp[0]);
@@ -3223,8 +3128,131 @@
           return ly < parseInt(yearPart) || (ly === parseInt(yearPart) && lm < monthIndex);
         })
         .reduce((sum, l) => sum + (parseFloat(l.casual_leaves) || 0), 0);
+        
+      let record = (state.managerData.leaves || []).find(l => l && l.username && l.username.toLowerCase() === u && l.month === month);
+      const clTaken = record ? parseFloat(record.casual_leaves) || 0 : 0;
+      const mlTaken = record ? parseFloat(record.medical_leaves) || 0 : 0;
       
-      let record = state.managerData.leaves.find(l => l && l.username && l.username.toLowerCase() === userKey && l.month === month);
+      const remainingCL = Math.max(0, clAccrued - clTakenPrior - clTaken);
+      const remainingML = Math.max(0, 1.0 - mlTaken);
+      
+      return {
+        clAccrued,
+        clTakenPrior,
+        clTaken,
+        mlTaken,
+        remainingCL,
+        remainingML,
+        record
+      };
+    }
+
+    // MANAGER LEAVES TRACKER VIEWER
+    function renderLeavesTracker() {
+      const monthInput = document.getElementById('mgr-leaves-month');
+      if (!monthInput.value) {
+        const savedMonth = localStorage.getItem('pf_mgr_leave_month');
+        monthInput.value = savedMonth || getCurrentMonthString();
+      }
+      const selectedMonth = monthInput.value; // YYYY-MM
+      localStorage.setItem('pf_mgr_leave_month', selectedMonth);
+      
+      const tbody = document.getElementById('mgr-leaves-rows');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      
+      const devUsersList = (state.devUsers && state.devUsers.length > 0)
+        ? state.devUsers.map(u => (u.username || '').trim().toLowerCase())
+        : [];
+        
+      // Get unique users from system, excluding unneeded employees
+      const allUsers = [...new Set([
+        ...DEFAULT_LEAVE_USERS,
+        ...devUsersList
+      ])].filter(u => u && !EXCLUDED_LEAVE_USERS.includes(u));
+      
+      allUsers.forEach(username => {
+        const bal = calculateEmployeeLeaveBalances(username, selectedMonth);
+        
+        const row = document.createElement('tr');
+        row.id = `leave-row-${username}`;
+        row.className = "border-b border-slate-50 hover:bg-slate-50/50 transition fade-in";
+        row.innerHTML = `
+          <td class="py-3.5 pr-4 font-bold text-slate-800 capitalize flex items-center">
+            <span class="h-1.5 w-1.5 rounded-full bg-brandBlue mr-2"></span>
+            ${username}
+          </td>
+          
+          <!-- Casual Leaves Taken -->
+          <td class="py-3.5 px-4 text-center">
+            <div class="inline-flex items-center space-x-1.5 bg-slate-100/70 border border-slate-200/60 px-2 py-1 rounded-xl">
+              <button type="button" onclick="updateEmployeeLeaves('${username}', 'casual_taken', -0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition select-none">-</button>
+              <input type="number" step="0.5" min="0" id="input-cl-taken-${username}" value="${bal.clTaken.toFixed(1)}" oninput="setEmployeeLeaveDirect('${username}', 'casual_taken', this.value)" onchange="setEmployeeLeaveDirect('${username}', 'casual_taken', this.value)" class="w-14 text-center text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-brandBlue">
+              <button type="button" onclick="updateEmployeeLeaves('${username}', 'casual_taken', 0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition select-none">+</button>
+            </div>
+          </td>
+          
+          <!-- Medical Leaves Taken -->
+          <td class="py-3.5 px-4 text-center">
+            <div class="inline-flex items-center space-x-1.5 bg-slate-100/70 border border-slate-200/60 px-2 py-1 rounded-xl">
+              <button type="button" onclick="updateEmployeeLeaves('${username}', 'medical_taken', -0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition select-none">-</button>
+              <input type="number" step="0.5" min="0" id="input-ml-taken-${username}" value="${bal.mlTaken.toFixed(1)}" oninput="setEmployeeLeaveDirect('${username}', 'medical_taken', this.value)" onchange="setEmployeeLeaveDirect('${username}', 'medical_taken', this.value)" class="w-14 text-center text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-brandBlue">
+              <button type="button" onclick="updateEmployeeLeaves('${username}', 'medical_taken', 0.5)" class="h-5 w-5 rounded-md hover:bg-slate-200 text-slate-500 font-extrabold flex items-center justify-center transition select-none">+</button>
+            </div>
+          </td>
+          
+          <!-- Remaining CL (Carried Forward) -->
+          <td class="py-3.5 px-4 text-center bg-blue-50/30">
+            <div class="inline-flex items-center space-x-1.5 bg-blue-100/60 border border-blue-200/60 px-2 py-1 rounded-xl">
+              <button type="button" onclick="updateEmployeeLeaves('${username}', 'remaining_cl', -0.5)" class="h-5 w-5 rounded-md hover:bg-blue-200 text-brandBlue font-extrabold flex items-center justify-center transition select-none">-</button>
+              <input type="number" step="0.5" min="0" id="input-rem-cl-${username}" value="${bal.remainingCL.toFixed(1)}" oninput="setEmployeeLeaveDirect('${username}', 'remaining_cl', this.value)" onchange="setEmployeeLeaveDirect('${username}', 'remaining_cl', this.value)" class="w-14 text-center text-xs font-bold text-brandBlue bg-white border border-blue-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-brandBlue">
+              <button type="button" onclick="updateEmployeeLeaves('${username}', 'remaining_cl', 0.5)" class="h-5 w-5 rounded-md hover:bg-blue-200 text-brandBlue font-extrabold flex items-center justify-center transition select-none">+</button>
+            </div>
+          </td>
+          
+          <!-- Remaining ML (This Month) -->
+          <td class="py-3.5 pl-4 text-center bg-purple-50/30">
+            <div class="inline-flex items-center space-x-1.5 bg-purple-100/60 border border-purple-200/60 px-2 py-1 rounded-xl">
+              <button type="button" onclick="updateEmployeeLeaves('${username}', 'remaining_ml', -0.5)" class="h-5 w-5 rounded-md hover:bg-purple-200 text-brandPurple font-extrabold flex items-center justify-center transition select-none">-</button>
+              <input type="number" step="0.5" min="0" max="1" id="input-rem-ml-${username}" value="${bal.remainingML.toFixed(1)}" oninput="setEmployeeLeaveDirect('${username}', 'remaining_ml', this.value)" onchange="setEmployeeLeaveDirect('${username}', 'remaining_ml', this.value)" class="w-14 text-center text-xs font-bold text-brandPurple bg-white border border-purple-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-brandPurple">
+              <button type="button" onclick="updateEmployeeLeaves('${username}', 'remaining_ml', 0.5)" class="h-5 w-5 rounded-md hover:bg-purple-200 text-brandPurple font-extrabold flex items-center justify-center transition select-none">+</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+      updateLeavesSaveButtonState();
+    }
+
+    function refreshUserLeaveRowDOM(userKey, month, skipInputType = null) {
+      const bal = calculateEmployeeLeaveBalances(userKey, month);
+      
+      const elClTaken = document.getElementById(`input-cl-taken-${userKey}`);
+      const elMlTaken = document.getElementById(`input-ml-taken-${userKey}`);
+      const elRemCl = document.getElementById(`input-rem-cl-${userKey}`);
+      const elRemMl = document.getElementById(`input-rem-ml-${userKey}`);
+      
+      if (elClTaken && skipInputType !== 'casual_taken' && skipInputType !== 'casual') {
+        elClTaken.value = bal.clTaken.toFixed(1);
+      }
+      if (elMlTaken && skipInputType !== 'medical_taken' && skipInputType !== 'medical') {
+        elMlTaken.value = bal.mlTaken.toFixed(1);
+      }
+      if (elRemCl && skipInputType !== 'remaining_cl') {
+        elRemCl.value = bal.remainingCL.toFixed(1);
+      }
+      if (elRemMl && skipInputType !== 'remaining_ml') {
+        elRemMl.value = bal.remainingML.toFixed(1);
+      }
+    }
+
+    function updateEmployeeLeaves(username, actionType, change) {
+      const monthInput = document.getElementById('mgr-leaves-month');
+      const month = monthInput ? monthInput.value || getCurrentMonthString() : getCurrentMonthString();
+      const userKey = username.toLowerCase();
+      
+      const bal = calculateEmployeeLeaveBalances(userKey, month);
+      let record = bal.record;
       if (!record) {
         record = {
           username: username,
@@ -3232,13 +3260,14 @@
           casual_leaves: 0,
           medical_leaves: 0
         };
+        if (!state.managerData.leaves) state.managerData.leaves = [];
         state.managerData.leaves.push(record);
       }
       
       let clCurr = parseFloat(record.casual_leaves) || 0;
       let mlCurr = parseFloat(record.medical_leaves) || 0;
-      let remCL = Math.max(0, clAccrued - clTakenPrior - clCurr);
-      let remML = Math.max(0, 1.0 - mlCurr);
+      let remCL = bal.remainingCL;
+      let remML = bal.remainingML;
       
       if (actionType === 'casual_taken' || actionType === 'casual') {
         record.casual_leaves = Math.max(0, clCurr + change);
@@ -3246,7 +3275,7 @@
         record.medical_leaves = Math.max(0, mlCurr + change);
       } else if (actionType === 'remaining_cl') {
         const targetRemCL = Math.max(0, remCL + change);
-        record.casual_leaves = Math.max(0, clAccrued - clTakenPrior - targetRemCL);
+        record.casual_leaves = Math.max(0, bal.clAccrued - bal.clTakenPrior - targetRemCL);
       } else if (actionType === 'remaining_ml') {
         const targetRemML = Math.max(0, remML + change);
         record.medical_leaves = Math.max(0, 1.0 - targetRemML);
@@ -3260,42 +3289,20 @@
         medical_leaves: record.medical_leaves
       };
       
-      renderLeavesTracker();
+      refreshUserLeaveRowDOM(userKey, month);
+      updateLeavesSaveButtonState();
     }
 
     function setEmployeeLeaveDirect(username, actionType, rawVal) {
       const val = parseFloat(rawVal);
       if (isNaN(val) || val < 0) return;
       
-      const month = document.getElementById('mgr-leaves-month').value || getCurrentMonthString();
+      const monthInput = document.getElementById('mgr-leaves-month');
+      const month = monthInput ? monthInput.value || getCurrentMonthString() : getCurrentMonthString();
       const userKey = username.toLowerCase();
-      const parts = month.split('-');
-      const yearPart = parts[0];
-      const monthIndex = parseInt(parts[1]) || 1;
       
-      const joinMonthStr = getUserJoiningMonth(userKey);
-      const joinParts = joinMonthStr.split('-');
-      const startYear = parseInt(joinParts[0]) || 2026;
-      const startMonth = parseInt(joinParts[1]) || 7;
-      
-      const yearDiff = parseInt(yearPart) - startYear;
-      const monthDiff = monthIndex - startMonth;
-      const totalMonths = (yearDiff * 12) + monthDiff + 1;
-      const clAccrued = totalMonths > 0 ? totalMonths * 1.0 : 0;
-      
-      // Sum up CL taken in prior months
-      const clTakenPrior = (state.managerData.leaves || [])
-        .filter(l => l && l.username && l.username.toLowerCase() === userKey)
-        .filter(l => {
-          const lp = (l.month || '').split('-');
-          const ly = parseInt(lp[0]);
-          const lm = parseInt(lp[1]) || 1;
-          if (ly < startYear || (ly === startYear && lm < startMonth)) return false;
-          return ly < parseInt(yearPart) || (ly === parseInt(yearPart) && lm < monthIndex);
-        })
-        .reduce((sum, l) => sum + (parseFloat(l.casual_leaves) || 0), 0);
-      
-      let record = state.managerData.leaves.find(l => l && l.username && l.username.toLowerCase() === userKey && l.month === month);
+      const bal = calculateEmployeeLeaveBalances(userKey, month);
+      let record = bal.record;
       if (!record) {
         record = {
           username: username,
@@ -3303,6 +3310,7 @@
           casual_leaves: 0,
           medical_leaves: 0
         };
+        if (!state.managerData.leaves) state.managerData.leaves = [];
         state.managerData.leaves.push(record);
       }
       
@@ -3311,7 +3319,7 @@
       } else if (actionType === 'medical_taken' || actionType === 'medical') {
         record.medical_leaves = val;
       } else if (actionType === 'remaining_cl') {
-        record.casual_leaves = Math.max(0, clAccrued - clTakenPrior - val);
+        record.casual_leaves = Math.max(0, bal.clAccrued - bal.clTakenPrior - val);
       } else if (actionType === 'remaining_ml') {
         record.medical_leaves = Math.max(0, 1.0 - val);
       }
@@ -3324,19 +3332,33 @@
         medical_leaves: record.medical_leaves
       };
       
-      renderLeavesTracker();
+      refreshUserLeaveRowDOM(userKey, month, actionType);
+      updateLeavesSaveButtonState();
     }
 
     function updateLeavesSaveButtonState() {
       const keys = Object.keys(state.unsavedLeaveChanges);
       const btn = document.getElementById('btn-save-leaves');
-      const countEl = document.getElementById('unsaved-leaves-count');
+      const textEl = document.getElementById('btn-save-leaves-text');
+      const badgeEl = document.getElementById('unsaved-leaves-badge');
+      if (!btn) return;
       
       if (keys.length > 0) {
-        btn.classList.remove('hidden');
-        countEl.innerText = keys.length;
+        btn.disabled = false;
+        btn.className = "px-4 py-2 bg-brandBlue hover:bg-brandBlue/90 text-white text-xs font-bold rounded-xl transition flex items-center shadow-lg shadow-brandBlue/20";
+        if (textEl) textEl.innerText = "Save Leave Changes";
+        if (badgeEl) {
+          badgeEl.classList.remove('hidden');
+          badgeEl.innerText = keys.length;
+        }
       } else {
-        btn.classList.add('hidden');
+        btn.disabled = true;
+        btn.className = "px-4 py-2 bg-slate-300 text-slate-500 text-xs font-bold rounded-xl transition flex items-center cursor-not-allowed opacity-60";
+        if (textEl) textEl.innerText = "All Changes Saved";
+        if (badgeEl) {
+          badgeEl.classList.add('hidden');
+          badgeEl.innerText = "0";
+        }
       }
     }
 
@@ -3373,9 +3395,16 @@
         state.unsavedLeaveChanges = {};
         updateLeavesSaveButtonState();
         renderLeavesTracker();
-        alert("Leave changes saved and synced successfully!");
+        
+        const toast = document.getElementById('leave-sync-toast');
+        if (toast) {
+          toast.classList.remove('hidden');
+          setTimeout(() => toast.classList.add('hidden'), 3500);
+        } else {
+          alert("Leave changes saved and synced successfully!");
+        }
       } else {
-        alert("Failed to save leaves: " + (res && res.error ? res.error : "Network error"));
+        alert("Failed to save leaves: " + (res && res.error ? res.error : "Network error. Please try again."));
       }
     }
 
@@ -3891,7 +3920,55 @@
       }
       
       if (action === 'get_manager_data') {
-        return { success: true, time_logs: logs, tasks: tasks, summaries: summaries };
+        let mockLeaves = JSON.parse(localStorage.getItem('mock_leaves') || '[]');
+        let mockRequests = JSON.parse(localStorage.getItem('mock_leave_requests') || '[]');
+        return { success: true, time_logs: logs, tasks: tasks, summaries: summaries, leaves: mockLeaves, leave_requests: mockRequests };
+      }
+      
+      if (action === 'save_leaves_bulk') {
+        let mockLeaves = JSON.parse(localStorage.getItem('mock_leaves') || '[]');
+        const updates = data.updates || [];
+        updates.forEach(item => {
+          const u = (item.username || '').trim().toLowerCase();
+          const m = (item.month || '').trim();
+          const cl = parseFloat(item.casual_leaves) || 0;
+          const ml = parseFloat(item.medical_leaves) || 0;
+          const idx = mockLeaves.findIndex(l => l.username.toLowerCase() === u && l.month === m);
+          if (idx !== -1) {
+            mockLeaves[idx].casual_leaves = cl;
+            mockLeaves[idx].medical_leaves = ml;
+          } else {
+            mockLeaves.push({ username: u, month: m, casual_leaves: cl, medical_leaves: ml });
+          }
+        });
+        localStorage.setItem('mock_leaves', JSON.stringify(mockLeaves));
+        return { success: true };
+      }
+      
+      if (action === 'apply_leave') {
+        let mockRequests = JSON.parse(localStorage.getItem('mock_leave_requests') || '[]');
+        mockRequests.push({
+          request_id: 'REQ-' + Math.floor(Math.random() * 1000000),
+          username: data.username,
+          start_date: data.start_date,
+          end_date: data.end_date,
+          leave_type: data.leave_type,
+          reason: data.reason,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        });
+        localStorage.setItem('mock_leave_requests', JSON.stringify(mockRequests));
+        return { success: true };
+      }
+      
+      if (action === 'update_leave_request_status') {
+        let mockRequests = JSON.parse(localStorage.getItem('mock_leave_requests') || '[]');
+        const idx = mockRequests.findIndex(r => r.request_id === data.request_id);
+        if (idx !== -1) {
+          mockRequests[idx].status = data.status;
+          localStorage.setItem('mock_leave_requests', JSON.stringify(mockRequests));
+        }
+        return { success: true };
       }
       
       if (action === 'get_all_users') {
