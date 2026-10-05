@@ -782,8 +782,9 @@
               </div>
             </div>
             <div class="text-xs text-slate-500 font-semibold leading-relaxed">
-              * Note: Casual Leaves accrue at <span class="text-brandBlue font-bold">1.0 day/month</span> (remaining CL carries forward).<br>
-              * Medical Leaves accrue at <span class="text-brandPurple font-bold">1.0 day/month</span> (remaining ML does not carry forward).
+              * Casual Leaves accrue at <span class="text-brandBlue font-bold">1.0 day/month</span> (remaining CL carries forward).<br>
+              * Medical Leaves accrue at <span class="text-brandPurple font-bold">1.0 day/month</span> (remaining ML does not carry forward).<br>
+              * <span class="text-brandBlue font-bold">+2.0 CL</span> Job Fair bonus credited for Anurag & Soumita (June weekend work).
             </div>
           </div>
           
@@ -3074,6 +3075,12 @@
       'manohar': '2026-08'   // Joined August 2026
     };
 
+    // Extra Casual Leave Credits (e.g. +2.0 CL for June Job Fair weekend work)
+    const EXTRA_CL_CREDITS = {
+      'anurag': 2.0,   // +2.0 CL credit for June Job Fair weekend duty
+      'soumita': 2.0   // +2.0 CL credit for June Job Fair weekend duty
+    };
+
     const EXCLUDED_LEAVE_USERS = ['hana', 'sai', 'mohana', 'nishant', 'asiery', 'asir'];
     const DEFAULT_LEAVE_USERS = ['anurag', 'soumita', 'edyn', 'sreedha', 'manohar'];
 
@@ -3103,7 +3110,8 @@
 
     function calculateEmployeeLeaveBalances(username, month) {
       const u = (username || '').trim().toLowerCase();
-      const parts = (month || getCurrentMonthString()).split('-');
+      const currentM = month || getCurrentMonthString();
+      const parts = currentM.split('-');
       const yearPart = parts[0];
       const monthIndex = parseInt(parts[1]) || 1;
       
@@ -3115,7 +3123,13 @@
       const yearDiff = parseInt(yearPart) - startYear;
       const monthDiff = monthIndex - startMonth;
       const totalMonths = (yearDiff * 12) + monthDiff + 1; // 1-based index
-      const clAccrued = totalMonths > 0 ? totalMonths * 1.0 : 0;
+      
+      // Base monthly accrual: 1.0 CL per month
+      const baseAccrued = totalMonths > 0 ? totalMonths * 1.0 : 0;
+      
+      // Bonus Comp-Off credits (e.g. +2.0 CL for June Job Fair weekend work for Soumita and Anurag)
+      const extraCredit = (currentM >= '2026-06' && EXTRA_CL_CREDITS[u]) ? EXTRA_CL_CREDITS[u] : 0;
+      const clAccrued = baseAccrued + extraCredit;
       
       // Sum up CL taken in prior months (strictly between joining month and selected month)
       const clTakenPrior = (state.managerData.leaves || [])
@@ -3129,7 +3143,7 @@
         })
         .reduce((sum, l) => sum + (parseFloat(l.casual_leaves) || 0), 0);
         
-      let record = (state.managerData.leaves || []).find(l => l && l.username && l.username.toLowerCase() === u && l.month === month);
+      let record = (state.managerData.leaves || []).find(l => l && l.username && l.username.toLowerCase() === u && l.month === currentM);
       const clTaken = record ? parseFloat(record.casual_leaves) || 0 : 0;
       const mlTaken = record ? parseFloat(record.medical_leaves) || 0 : 0;
       
@@ -3431,7 +3445,9 @@
       const yearDiff = parseInt(yearPart) - startYear;
       const monthDiff = monthIndex - startMonth;
       const totalMonths = (yearDiff * 12) + monthDiff + 1; // 1-based index
-      const clAccrued = totalMonths > 0 ? totalMonths * 1.0 : 0;
+      const baseAccrued = totalMonths > 0 ? totalMonths * 1.0 : 0;
+      const extraCredit = (currentMonth >= '2026-06' && EXTRA_CL_CREDITS[username]) ? EXTRA_CL_CREDITS[username] : 0;
+      const clAccrued = baseAccrued + extraCredit;
       
       const clTakenUpToNow = (state.userLeaves || [])
         .filter(l => {
