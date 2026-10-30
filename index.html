@@ -277,7 +277,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
-            <input type="password" id="login-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent text-sm transition duration-200">
+            <input type="password" id="login-password" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-transparent text-sm transition duration-200">
           </div>
           
           <!-- Error message container -->
@@ -564,6 +564,129 @@
           </div>
         </div>
       </div>
+
+      <!-- WORK FROM HOME (WFH) MODULE -->
+      <div class="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-slate-100 gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </span>
+              <h3 class="font-bold text-slate-800 text-lg">Work From Home (WFH) Planner</h3>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Weekly remote work schedule, company policy guidelines & change requests.</p>
+          </div>
+          
+          <div id="emp-wfh-current-badge-container">
+            <!-- Dynamic Current Week Status Badge -->
+          </div>
+        </div>
+
+        <!-- Guidelines Banner -->
+        <div class="mt-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-purple-50/50 border border-indigo-100/60">
+          <div class="flex items-start space-x-3">
+            <span class="p-2 rounded-xl bg-white text-indigo-600 shadow-xs flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+            <div class="text-xs space-y-1">
+              <p class="font-bold text-slate-800">PeriFerry Work From Home (WFH) Guidelines</p>
+              <ul class="text-slate-600 space-y-1 list-disc list-inside text-[11px] leading-relaxed">
+                <li><span class="font-semibold text-slate-700">Weekly Allowance:</span> Maximum <strong>1 day WFH per week</strong> (Monday – Sunday) across all teams (Recruitment, Accounts, Sensitization).</li>
+                <li><span class="font-semibold text-slate-700">Standard Default Day:</span> <strong>Wednesday</strong> is the organization-wide default WFH day unless customized by your manager.</li>
+                <li><span class="font-semibold text-slate-700">Day Change Flexibility:</span> Need to change your WFH day for a specific week? Submit a request below with prior manager permission.</li>
+                <li><span class="font-semibold text-slate-700">Non-Leave Status:</span> WFH is regular full duty — it <strong>never</strong> deducts from your Casual Leave (CL) or Medical Leave (ML) balance.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Column Layout: This Week Card & Request Change Form -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+          <!-- Left: Current Week Status & Schedule Details (7 cols) -->
+          <div class="lg:col-span-7 flex flex-col space-y-4">
+            <div class="p-5 rounded-2xl border border-slate-100 bg-slate-50/60">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">This Week's Schedule</span>
+                <span id="emp-wfh-week-range" class="text-xs font-semibold text-slate-500">Loading...</span>
+              </div>
+              <div class="flex items-center space-x-4 bg-white p-4 rounded-xl border border-slate-100">
+                <div class="h-12 w-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex flex-col items-center justify-center flex-shrink-0">
+                  <span id="emp-wfh-day-num" class="text-lg font-black leading-tight">--</span>
+                  <span id="emp-wfh-day-name" class="text-[9px] font-bold uppercase leading-none">DAY</span>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center space-x-2">
+                    <h4 id="emp-wfh-day-title" class="font-bold text-slate-800 text-sm">Wednesday (Default Schedule)</h4>
+                    <span id="emp-wfh-status-tag" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">Scheduled</span>
+                  </div>
+                  <p id="emp-wfh-day-desc" class="text-xs text-slate-500 mt-0.5">Assigned WFH day for this week. Standard working hours apply.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upcoming / History Table -->
+            <div>
+              <h4 class="text-xs font-bold text-slate-700 mb-2">My WFH Schedule & Request History</h4>
+              <div class="overflow-x-auto border border-slate-100 rounded-2xl">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-400 text-[10px] font-bold tracking-wider uppercase">
+                      <th class="py-2.5 px-3">Date</th>
+                      <th class="py-2.5 px-3">Day</th>
+                      <th class="py-2.5 px-3">Type / Reason</th>
+                      <th class="py-2.5 px-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="emp-wfh-history-rows" class="text-xs font-medium text-slate-700 divide-y divide-slate-100">
+                    <!-- Dynamic WFH history rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Request to Change WFH Day Form (5 cols) -->
+          <div class="lg:col-span-5 bg-slate-50/50 p-5 rounded-2xl border border-slate-100 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center space-x-2 mb-2">
+                <span class="p-1.5 rounded-lg bg-indigo-100 text-indigo-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </span>
+                <h4 class="font-bold text-slate-800 text-xs">Request WFH Day Change</h4>
+              </div>
+              <p class="text-[11px] text-slate-500 mb-4">Need to work from home on a day other than Wednesday? Submit a request to your manager (max 1 day/week).</p>
+              
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-600 mb-1">Target WFH Date</label>
+                  <input type="date" id="emp-wfh-req-date" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                  <p class="text-[10px] text-slate-400 mt-1">Select any working day (Mon-Fri) for your requested week.</p>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-600 mb-1">Reason / Note for Manager</label>
+                  <textarea id="emp-wfh-req-reason" rows="2" placeholder="e.g., Client meeting on Wed, requesting Thu WFH instead" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 mt-2">
+              <button onclick="submitWfhChangeRequest()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span>Submit Day Change Request</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ==================== 5. HR / MANAGER DASHBOARD ==================== -->
@@ -642,6 +765,10 @@
           </button>
           <button onclick="switchMgrTab('requests')" id="mgr-tab-requests" class="px-6 py-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition">
             Leave Requests
+          </button>
+          <button onclick="switchMgrTab('wfh')" id="mgr-tab-wfh" class="px-6 py-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition relative">
+            WFH Tracker
+            <span id="mgr-wfh-pending-badge" class="hidden ml-1 px-1.5 py-0.5 text-[9px] font-bold bg-amber-500 text-white rounded-full"></span>
           </button>
         </div>
 
@@ -826,6 +953,130 @@
             </table>
           </div>
         </div>
+
+        <!-- Tab Body: Work From Home (WFH) Tracker -->
+        <div id="mgr-body-wfh" class="mgr-tab-body p-6 hidden">
+          <!-- Top KPI / Metric Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-indigo-500">Active Team Members</div>
+              <div id="mgr-wfh-kpi-total" class="text-2xl font-black text-indigo-950 mt-1">5</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Recruitment, Accounts, Sensitization</div>
+            </div>
+            <div class="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Scheduled WFH</div>
+              <div id="mgr-wfh-kpi-scheduled" class="text-2xl font-black text-emerald-950 mt-1">0</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Assigned this week (1/1 day)</div>
+            </div>
+            <div class="bg-amber-50/50 border border-amber-100 rounded-2xl p-4">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-amber-600">Pending Requests</div>
+              <div id="mgr-wfh-kpi-pending" class="text-2xl font-black text-amber-950 mt-1">0</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Day change awaiting approval</div>
+            </div>
+            <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-4">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-blue-600">Policy Standard</div>
+              <div class="text-base font-black text-blue-950 mt-1">Wednesday (1 d/wk)</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Standard default day for all</div>
+            </div>
+          </div>
+
+          <!-- Action bar: Week navigation & Quick actions -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60">
+            <!-- Week selector -->
+            <div class="flex items-center space-x-2">
+              <button onclick="changeMgrWfhWeek(-1)" class="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 transition shadow-2xs" title="Previous Week">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-center">
+                <span id="mgr-wfh-week-label" class="text-xs font-bold text-slate-800">Week of ...</span>
+                <span id="mgr-wfh-week-badge" class="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-600">Current Week</span>
+              </div>
+              <button onclick="changeMgrWfhWeek(1)" class="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 transition shadow-2xs" title="Next Week">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              <button onclick="changeMgrWfhWeek(0, true)" class="text-xs text-brandBlue font-semibold hover:underline ml-2">Reset to Today</button>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center space-x-2">
+              <button onclick="setWednesdayForAllCurrentWeek()" class="px-3.5 py-2 rounded-xl bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 text-xs font-bold transition flex items-center shadow-2xs">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Apply Wednesday Default for All
+              </button>
+              <button onclick="openAssignWfhModal()" class="px-3.5 py-2 rounded-xl bg-brandBlue hover:bg-brandBlue/90 text-white text-xs font-bold transition flex items-center shadow-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Assign / Change WFH Day
+              </button>
+            </div>
+          </div>
+
+          <!-- Pending Requests Section (Conditional) -->
+          <div id="mgr-wfh-pending-section" class="mb-6 hidden">
+            <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                  <span class="p-1 rounded bg-amber-200 text-amber-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </span>
+                  <h4 class="text-xs font-bold text-amber-900">Pending Employee WFH Day-Change Requests</h4>
+                </div>
+                <span id="mgr-wfh-pending-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">0 Requests</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse bg-white rounded-xl overflow-hidden border border-amber-100">
+                  <thead>
+                    <tr class="bg-amber-100/40 text-amber-900 text-[10px] font-bold uppercase tracking-wider border-b border-amber-100">
+                      <th class="py-2 px-3">Employee</th>
+                      <th class="py-2 px-3">Requested Date</th>
+                      <th class="py-2 px-3">Reason / Details</th>
+                      <th class="py-2 px-3">Applied On</th>
+                      <th class="py-2 px-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mgr-wfh-pending-rows" class="text-xs divide-y divide-amber-50">
+                    <!-- Dynamic pending WFH rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Team Roster Table -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-xs font-bold text-slate-700">Team Weekly WFH Roster & Allocation</h4>
+              <p class="text-[11px] text-slate-400">Strictly 1 WFH day per week per employee across all departments.</p>
+            </div>
+            
+            <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-2xs">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-400 text-[10px] font-bold tracking-wider uppercase">
+                    <th class="py-3 px-4">Employee</th>
+                    <th class="py-3 px-4">Department</th>
+                    <th class="py-3 px-4">Scheduled WFH Day</th>
+                    <th class="py-3 px-4">Weekly Quota</th>
+                    <th class="py-3 px-4">Notes / Policy Source</th>
+                    <th class="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="mgr-wfh-roster-rows" class="text-sm font-medium text-slate-700 divide-y divide-slate-100">
+                  <!-- Dynamic roster rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -924,6 +1175,49 @@
     </div>
   </div>
 
+  <!-- Manager Assign / Change WFH Modal -->
+  <div id="modal-assign-wfh" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xl max-w-md w-full">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h3 class="font-bold text-slate-800 text-base">Assign / Change WFH Day</h3>
+        <button onclick="closeAssignWfhModal()" class="text-slate-400 hover:text-slate-600 transition p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div class="space-y-4 text-left">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Employee</label>
+          <select id="modal-wfh-emp-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm transition">
+            <!-- Options populated dynamically -->
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Target WFH Date</label>
+          <input type="date" id="modal-wfh-date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm transition">
+          <p class="text-[10px] text-slate-400 mt-1">Select the single day allocated for remote work for that week.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Reason / Manager Note</label>
+          <input type="text" id="modal-wfh-reason" placeholder="e.g. Swapped day with manager approval" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm transition">
+        </div>
+
+        <div class="p-3 rounded-xl bg-blue-50/70 border border-blue-100 text-[11px] text-blue-800">
+          💡 <strong>Policy Check:</strong> Assigning a new WFH day updates the 1-day allowance for this employee's week. This will not deduct from any leave balances.
+        </div>
+      </div>
+      
+      <div class="flex justify-end space-x-3 mt-6">
+        <button onclick="closeAssignWfhModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">Cancel</button>
+        <button onclick="submitManagerWfhAssignment()" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-brandBlue hover:bg-brandBlue/90 transition shadow-xs">Save WFH Schedule</button>
+      </div>
+    </div>
+  </div>
+
   <!-- User Add/Edit Modal -->
   <div id="modal-user" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
     <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xl max-w-md w-full">
@@ -999,7 +1293,11 @@
       mgrAttendanceSortOrder: 'desc',
       mgrSummariesSortOrder: 'desc',
       unsavedLeaveChanges: {},
-      unsavedTaskChanges: {}
+      unsavedTaskChanges: {},
+      // WFH module state
+      wfhWeekOffset: 0,       // 0 = current week, -1 = prev, +1 = next
+      userLeaveRequests: [],   // ensure initialized for WFH too
+      userLeaves: []
     };
 
     function getLocalDateString() {
@@ -1389,7 +1687,7 @@
             return { success: true };
             
           } else if (action === 'apply_leave') {
-            const id = 'REQ-' + Math.floor(Math.random() * 1000000);
+            const id = (arg.leave_type === 'wfh' ? 'WFH-' : 'REQ-') + Math.floor(Math.random() * 1000000);
             const now = new Date().toISOString();
             await supabaseFetch('/leave_requests', {
               method: 'POST',
@@ -1400,10 +1698,46 @@
                 end_date: arg.end_date,
                 leave_type: arg.leave_type,
                 reason: arg.reason,
-                status: 'pending',
+                status: arg.status || 'pending',
                 created_at: now
               })
             });
+            return { success: true };
+            
+          } else if (action === 'save_wfh_schedule') {
+            const username = (arg.username || '').trim().toLowerCase();
+            const date = (arg.date || '').trim();
+            const reason = (arg.reason || 'Manager Scheduled WFH').trim();
+            const status = (arg.status || 'approved').trim();
+            const requestId = arg.request_id || ('WFH-' + Math.floor(Math.random() * 1000000));
+            const now = new Date().toISOString();
+            
+            const existing = await supabaseFetch(`/leave_requests?username=ilike.${username}&leave_type=eq.wfh&start_date=eq.${date}`);
+            if (existing && existing.length > 0) {
+              await supabaseFetch(`/leave_requests?request_id=eq.${existing[0].request_id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                  status: status,
+                  reason: reason,
+                  manager_comments: arg.manager_comments || ''
+                })
+              });
+            } else {
+              await supabaseFetch('/leave_requests', {
+                method: 'POST',
+                body: JSON.stringify({
+                  request_id: requestId,
+                  username: username,
+                  start_date: date,
+                  end_date: date,
+                  leave_type: 'wfh',
+                  reason: reason,
+                  status: status,
+                  created_at: now,
+                  manager_comments: arg.manager_comments || ''
+                })
+              });
+            }
             return { success: true };
             
           } else if (action === 'update_leave_request_status') {
@@ -1425,6 +1759,10 @@
             });
             
             if (status === 'approved') {
+              // WFH is a work arrangement, not a leave. Do not deduct casual or medical leaves.
+              if ((req.leave_type || '').toLowerCase() === 'wfh') {
+                return { success: true };
+              }
               const sParts = (req.start_date || '').split('-').map(Number);
               const eParts = (req.end_date || '').split('-').map(Number);
               let curr = new Date(sParts[0], sParts[1] - 1, sParts[2], 12, 0, 0);
@@ -1845,10 +2183,11 @@
         
         document.getElementById('daily-summary-text').value = res.today_summary || '';
         
-        // Render Kanban Board & Leaves Dashboard
+        // Render Kanban Board & Leaves Dashboard & WFH Section
         renderKanbanBoard();
         setupPlanAssigneeSelector();
         renderEmployeeLeavesDashboard();
+        renderEmpWfhSection();
       } else {
         console.error("Error loading tasks:", res.error);
       }
@@ -2403,6 +2742,18 @@
           leave_requests: res.leave_requests || []
         };
         
+        // Ensure user list is loaded for WFH roster & employee dropdowns
+        if (!state.devUsers || state.devUsers.length === 0) {
+          try {
+            const uRes = await callPython('api_request', { action: 'get_all_users' });
+            if (uRes && uRes.success && uRes.users) {
+              state.devUsers = uRes.users;
+            }
+          } catch(e) {
+            console.warn("Could not pre-fetch devUsers:", e);
+          }
+        }
+        
         document.getElementById('mgr-last-update').innerText = new Date().toLocaleTimeString();
         renderManagerDashboard();
       } else {
@@ -2557,17 +2908,17 @@
       document.querySelectorAll('.mgr-tab-body').forEach(b => b.classList.add('hidden'));
       
       // Un-select all header buttons
-      ['attendance', 'timeline', 'kanbans', 'summaries', 'leaves', 'requests'].forEach(id => {
+      ['attendance', 'timeline', 'kanbans', 'summaries', 'leaves', 'requests', 'wfh'].forEach(id => {
         const btn = document.getElementById('mgr-tab-' + id);
         if (btn) {
-          btn.className = "px-6 py-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition";
+          btn.className = "px-6 py-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition relative";
         }
       });
       
       // Select selected
       const selectedBtn = document.getElementById('mgr-tab-' + tabId);
       if (selectedBtn) {
-        selectedBtn.className = "px-6 py-4 text-xs font-bold text-brandBlue border-b-2 border-brandBlue transition";
+        selectedBtn.className = "px-6 py-4 text-xs font-bold text-brandBlue border-b-2 border-brandBlue transition relative";
       }
       const tabBody = document.getElementById('mgr-body-' + tabId);
       tabBody.classList.remove('hidden', 'fade-in');
@@ -2587,6 +2938,8 @@
         renderLeavesTracker();
       } else if (tabId === 'requests') {
         renderManagerLeaveRequests();
+      } else if (tabId === 'wfh') {
+        renderMgrWfhTab();
       }
     }
 
@@ -3864,7 +4217,11 @@
         const u = data.username.toLowerCase();
         const userTasks = tasks.filter(t => t.username.toLowerCase() === u);
         const summ = summaries.find(s => s.username.toLowerCase() === u && s.date === today);
-        return { success: true, tasks: userTasks, today_summary: summ ? summ.summary : '' };
+        const mockLeaves = JSON.parse(localStorage.getItem('mock_leaves') || '[]');
+        const mockRequests = JSON.parse(localStorage.getItem('mock_leave_requests') || '[]');
+        const userLeaves = mockLeaves.filter(l => (l.username || '').toLowerCase() === u);
+        const userRequests = mockRequests.filter(r => (r.username || '').toLowerCase() === u);
+        return { success: true, tasks: userTasks, today_summary: summ ? summ.summary : '', leaves: userLeaves, leave_requests: userRequests };
       }
       
       if (action === 'add_tasks') {
@@ -3962,6 +4319,37 @@
         return { success: true };
       }
       
+      if (action === 'save_wfh_schedule') {
+        let mockRequests = JSON.parse(localStorage.getItem('mock_leave_requests') || '[]');
+        const username = (data.username || '').trim().toLowerCase();
+        const date = (data.date || '').trim();
+        const reason = data.reason || 'Manager Scheduled WFH';
+        const status = data.status || 'approved';
+        // Update if exists for same user+date, else insert
+        const idx = mockRequests.findIndex(r =>
+          (r.username || '').toLowerCase() === username &&
+          (r.leave_type || '').toLowerCase() === 'wfh' &&
+          r.start_date === date
+        );
+        if (idx !== -1) {
+          mockRequests[idx].reason = reason;
+          mockRequests[idx].status = status;
+        } else {
+          mockRequests.push({
+            request_id: 'WFH-' + Math.floor(Math.random() * 1000000),
+            username: username,
+            start_date: date,
+            end_date: date,
+            leave_type: 'wfh',
+            reason: reason,
+            status: status,
+            created_at: new Date().toISOString()
+          });
+        }
+        localStorage.setItem('mock_leave_requests', JSON.stringify(mockRequests));
+        return { success: true };
+      }
+
       if (action === 'update_leave_request_status') {
         let mockRequests = JSON.parse(localStorage.getItem('mock_leave_requests') || '[]');
         const idx = mockRequests.findIndex(r => r.request_id === data.request_id);
@@ -4041,6 +4429,546 @@
         }, 150);
       }
     };
+
+
+    // ============================================================
+    // WFH MODULE — Employee + Manager
+    // All WFH records are stored in leave_requests with leave_type='wfh'
+    // Approved by manager = status:'approved'
+    // Employee change-request = status:'pending'
+    // ============================================================
+
+    // ---------- HELPERS ----------
+
+    /** Returns Monday of the week that is `offset` weeks from today */
+    function getWeekStart(offset = 0) {
+      const d = new Date();
+      const day = d.getDay(); // 0=Sun
+      const diff = day === 0 ? -6 : 1 - day; // shift to Monday
+      d.setDate(d.getDate() + diff + offset * 7);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    /** Format Date -> YYYY-MM-DD */
+    function dateToStr(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    /** Friendly format: "Mon 14 Oct" */
+    function friendlyDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr + 'T12:00:00');
+      return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+
+    /** Day name from YYYY-MM-DD */
+    function dayName(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr + 'T12:00:00');
+      return d.toLocaleDateString('en-IN', { weekday: 'long' });
+    }
+
+    /** Week range label: "Oct 13 – Oct 19, 2026" */
+    function weekRangeLabel(mondayDate) {
+      const sun = new Date(mondayDate);
+      sun.setDate(sun.getDate() + 6);
+      const opts = { day: 'numeric', month: 'short' };
+      return `${mondayDate.toLocaleDateString('en-IN', opts)} – ${sun.toLocaleDateString('en-IN', { ...opts, year: 'numeric' })}`;
+    }
+
+    /** Get WFH records for a specific user from state */
+    function getUserWfhRecords(username) {
+      const all = state.userLeaveRequests || [];
+      return all.filter(r => (r.leave_type || '').toLowerCase() === 'wfh'
+        && (r.username || '').toLowerCase() === (username || '').toLowerCase());
+    }
+
+    /** Get ALL WFH records from manager data */
+    function getAllWfhRecords() {
+      const all = state.managerData.leave_requests || [];
+      return all.filter(r => (r.leave_type || '').toLowerCase() === 'wfh');
+    }
+
+    /** Status badge HTML */
+    function wfhStatusBadge(status) {
+      const s = (status || 'pending').toLowerCase();
+      if (s === 'approved') return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">Approved</span>`;
+      if (s === 'rejected') return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">Rejected</span>`;
+      return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>`;
+    }
+
+    // ---------- EMPLOYEE WFH SECTION ----------
+
+    function renderEmpWfhSection() {
+      const username = state.currentUser ? state.currentUser.username.toLowerCase() : '';
+      const wfhRecords = getUserWfhRecords(username);
+
+      // --- This week's WFH date ---
+      const today = new Date();
+      const monday = getWeekStart(0);
+      const sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6);
+      const mondayStr = dateToStr(monday);
+      const sundayStr = dateToStr(sunday);
+
+      // Update week range label
+      const weekRangeEl = document.getElementById('emp-wfh-week-range');
+      if (weekRangeEl) weekRangeEl.innerText = weekRangeLabel(monday);
+
+      // Find this week's approved WFH
+      const thisWeekApproved = wfhRecords.find(r => {
+        const d = (r.start_date || '').trim();
+        return d >= mondayStr && d <= sundayStr && (r.status || '').toLowerCase() === 'approved';
+      });
+
+      // Find pending request this week
+      const thisWeekPending = wfhRecords.find(r => {
+        const d = (r.start_date || '').trim();
+        return d >= mondayStr && d <= sundayStr && (r.status || '').toLowerCase() === 'pending';
+      });
+
+      const wfhDateStr = thisWeekApproved ? thisWeekApproved.start_date : null;
+
+      // Update "This Week's Schedule" card
+      const dayNumEl = document.getElementById('emp-wfh-day-num');
+      const dayNameEl = document.getElementById('emp-wfh-day-name');
+      const dayTitleEl = document.getElementById('emp-wfh-day-title');
+      const statusTagEl = document.getElementById('emp-wfh-status-tag');
+      const dayDescEl = document.getElementById('emp-wfh-day-desc');
+
+      if (wfhDateStr) {
+        const d = new Date(wfhDateStr + 'T12:00:00');
+        if (dayNumEl) dayNumEl.innerText = d.getDate();
+        if (dayNameEl) dayNameEl.innerText = d.toLocaleDateString('en-IN', { weekday: 'short' }).toUpperCase();
+        if (dayTitleEl) dayTitleEl.innerText = `${d.toLocaleDateString('en-IN', { weekday: 'long' })} (Manager Assigned)`;
+        if (statusTagEl) {
+          statusTagEl.innerText = 'Scheduled';
+          statusTagEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200';
+        }
+        if (dayDescEl) dayDescEl.innerText = `Your WFH day this week is ${d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}. Standard working hours apply.`;
+      } else if (thisWeekPending) {
+        const d = new Date(thisWeekPending.start_date + 'T12:00:00');
+        if (dayNumEl) dayNumEl.innerText = d.getDate();
+        if (dayNameEl) dayNameEl.innerText = d.toLocaleDateString('en-IN', { weekday: 'short' }).toUpperCase();
+        if (dayTitleEl) dayTitleEl.innerText = `${d.toLocaleDateString('en-IN', { weekday: 'long' })} (Requested)`;
+        if (statusTagEl) {
+          statusTagEl.innerText = 'Pending Approval';
+          statusTagEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200';
+        }
+        if (dayDescEl) dayDescEl.innerText = `Your WFH day change request for ${d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })} is awaiting manager approval.`;
+      } else {
+        // Default Wednesday display
+        const wednesdayThisWeek = new Date(monday);
+        wednesdayThisWeek.setDate(monday.getDate() + 2);
+        if (dayNumEl) dayNumEl.innerText = wednesdayThisWeek.getDate();
+        if (dayNameEl) dayNameEl.innerText = 'WED';
+        if (dayTitleEl) dayTitleEl.innerText = 'Wednesday (Default Policy)';
+        if (statusTagEl) {
+          statusTagEl.innerText = 'Policy Default';
+          statusTagEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100';
+        }
+        if (dayDescEl) dayDescEl.innerText = 'No explicit assignment yet. Wednesday applies per PeriFerry policy. Your manager may update this.';
+      }
+
+      // Current week badge
+      const badgeContainer = document.getElementById('emp-wfh-current-badge-container');
+      if (badgeContainer) {
+        if (thisWeekApproved) {
+          badgeContainer.innerHTML = `<span class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-xs font-bold"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>WFH: ${friendlyDate(thisWeekApproved.start_date)}</span></span>`;
+        } else if (thisWeekPending) {
+          badgeContainer.innerHTML = `<span class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Change Requested: ${friendlyDate(thisWeekPending.start_date)}</span></span>`;
+        } else {
+          badgeContainer.innerHTML = `<span class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>WFH: Wednesday (Default)</span></span>`;
+        }
+      }
+
+      // --- History Table ---
+      const tbody = document.getElementById('emp-wfh-history-rows');
+      if (tbody) {
+        tbody.innerHTML = '';
+        const sorted = [...wfhRecords].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+        if (sorted.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400 text-xs italic">No WFH records found. Your manager will assign WFH days.</td></tr>`;
+        } else {
+          sorted.forEach(r => {
+            const isPast = r.start_date < dateToStr(today);
+            const typeLabel = r.status === 'approved' ? 'Approved Schedule' : (r.status === 'rejected' ? 'Rejected Request' : 'Change Request');
+            const row = document.createElement('tr');
+            row.className = 'border-b border-slate-50 hover:bg-slate-50/50 transition' + (isPast ? ' opacity-60' : '');
+            row.innerHTML = `
+              <td class="py-2.5 px-3 font-semibold">${r.start_date}</td>
+              <td class="py-2.5 px-3">${dayName(r.start_date)}</td>
+              <td class="py-2.5 px-3 text-slate-500">${typeLabel}${r.reason ? ` — ${r.reason}` : ''}</td>
+              <td class="py-2.5 px-3">${wfhStatusBadge(r.status)}</td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+      }
+    }
+
+    async function submitWfhChangeRequest() {
+      const date = document.getElementById('emp-wfh-req-date').value;
+      const reason = document.getElementById('emp-wfh-req-reason').value.trim();
+      const username = state.currentUser ? state.currentUser.username : '';
+
+      if (!date) {
+        alert('Please select the date you would like to work from home.');
+        return;
+      }
+
+      // Validate it's a weekday (Mon-Fri)
+      const d = new Date(date + 'T12:00:00');
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) {
+        alert('WFH days must be on a weekday (Monday to Friday).');
+        return;
+      }
+
+      // Check if employee already has WFH (approved or pending) in the same week
+      const monday = getWeekStart(0);
+      const wfhRecords = getUserWfhRecords(username);
+      const monStr = dateToStr(monday);
+      const sunStr = dateToStr(new Date(monday.getTime() + 6 * 86400000));
+      const hasExisting = wfhRecords.find(r => {
+        const rd = (r.start_date || '').trim();
+        return rd >= monStr && rd <= sunStr && (r.status || '').toLowerCase() !== 'rejected';
+      });
+
+      if (hasExisting) {
+        const dName = dayName(hasExisting.start_date);
+        alert(`You already have a WFH ${hasExisting.status === 'approved' ? 'schedule' : 'request'} for ${dName} this week (${hasExisting.start_date}). Only 1 WFH day per week is allowed. Contact your manager if you need to change it.`);
+        return;
+      }
+
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'apply_leave',
+        username: username,
+        start_date: date,
+        end_date: date,
+        leave_type: 'wfh',
+        reason: reason || 'Employee day-change request',
+        status: 'pending'
+      });
+      toggleLoader(false);
+
+      if (res && res.success) {
+        alert('WFH day change request submitted! Your manager will review and approve it shortly.');
+        document.getElementById('emp-wfh-req-date').value = '';
+        document.getElementById('emp-wfh-req-reason').value = '';
+        loadEmployeeData();
+      } else {
+        alert('Failed to submit WFH request: ' + (res.error || 'Network error'));
+      }
+    }
+
+    // ---------- MANAGER WFH TAB ----------
+
+    function renderMgrWfhTab() {
+      const allWfh = getAllWfhRecords();
+
+      // Week range for selected offset
+      const monday = getWeekStart(state.wfhWeekOffset);
+      const sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6);
+      const monStr = dateToStr(monday);
+      const sunStr = dateToStr(sunday);
+      const today = dateToStr(new Date());
+
+      // Update week navigation UI
+      const weekLabel = document.getElementById('mgr-wfh-week-label');
+      if (weekLabel) weekLabel.innerText = `Week of ${weekRangeLabel(monday)}`;
+      const weekBadge = document.getElementById('mgr-wfh-week-badge');
+      if (weekBadge) {
+        if (state.wfhWeekOffset === 0) {
+          weekBadge.innerText = 'Current Week';
+          weekBadge.className = 'ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-600';
+        } else if (state.wfhWeekOffset < 0) {
+          weekBadge.innerText = 'Past Week';
+          weekBadge.className = 'ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500';
+        } else {
+          weekBadge.innerText = 'Future Week';
+          weekBadge.className = 'ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600';
+        }
+      }
+
+      // All employees (from manager data + registered list)
+      const defaultUsers = ['edyn', 'soumita', 'anurag', 'nishant', 'sreedha', 'manohar', 'mohana'];
+      const allUsers = (state.managerData.time_logs || []).map(l => (l.username || '').toLowerCase());
+      const devUsers = (state.devUsers || []).map(u => (u.username || '').toLowerCase());
+      const combinedUsers = [...new Set([...defaultUsers, ...allUsers, ...devUsers])].filter(u => u && u !== 'hana' && u !== 'sai');
+
+      // KPIs
+      const thisWeekApproved = allWfh.filter(r => {
+        const d = (r.start_date || '').trim();
+        return d >= monStr && d <= sunStr && r.status === 'approved';
+      });
+      const pendingAll = allWfh.filter(r => r.status === 'pending');
+
+      const kpiTotal = document.getElementById('mgr-wfh-kpi-total');
+      if (kpiTotal) kpiTotal.innerText = combinedUsers.length || 0;
+      const kpiScheduled = document.getElementById('mgr-wfh-kpi-scheduled');
+      if (kpiScheduled) kpiScheduled.innerText = thisWeekApproved.length;
+      const kpiPending = document.getElementById('mgr-wfh-kpi-pending');
+      if (kpiPending) kpiPending.innerText = pendingAll.length;
+
+      // Pending badge on WFH tab button
+      const pendingBadge = document.getElementById('mgr-wfh-pending-badge');
+      if (pendingBadge) {
+        if (pendingAll.length > 0) {
+          pendingBadge.innerText = pendingAll.length;
+          pendingBadge.classList.remove('hidden');
+        } else {
+          pendingBadge.classList.add('hidden');
+        }
+      }
+
+      // ---------- Pending Requests Section ----------
+      const pendingSection = document.getElementById('mgr-wfh-pending-section');
+      const pendingRows = document.getElementById('mgr-wfh-pending-rows');
+      const pendingCount = document.getElementById('mgr-wfh-pending-count');
+
+      if (pendingAll.length > 0 && pendingSection && pendingRows) {
+        pendingSection.classList.remove('hidden');
+        if (pendingCount) pendingCount.innerText = `${pendingAll.length} Request${pendingAll.length > 1 ? 's' : ''}`;
+        pendingRows.innerHTML = '';
+        pendingAll.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-amber-50/40 transition';
+          tr.innerHTML = `
+            <td class="py-2.5 px-3 font-semibold capitalize">${r.username}</td>
+            <td class="py-2.5 px-3">${friendlyDate(r.start_date)} <span class="text-slate-400">(${dayName(r.start_date)})</span></td>
+            <td class="py-2.5 px-3 text-slate-600">${r.reason || '-'}</td>
+            <td class="py-2.5 px-3 text-slate-400 text-[10px]">${(r.created_at || '').split('T')[0] || '-'}</td>
+            <td class="py-2.5 px-3 text-right space-x-2">
+              <button onclick="processWfhRequest('${r.request_id}', 'approved')" class="px-2.5 py-1 text-[10px] font-bold bg-green-600 hover:bg-green-700 text-white rounded-lg transition">Approve</button>
+              <button onclick="processWfhRequest('${r.request_id}', 'rejected')" class="px-2.5 py-1 text-[10px] font-bold bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition">Reject</button>
+            </td>
+          `;
+          pendingRows.appendChild(tr);
+        });
+      } else if (pendingSection) {
+        pendingSection.classList.add('hidden');
+      }
+
+      // ---------- Weekly Roster Table ----------
+      const rosterBody = document.getElementById('mgr-wfh-roster-rows');
+      if (!rosterBody) return;
+      rosterBody.innerHTML = '';
+
+      if (combinedUsers.length === 0) {
+        rosterBody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-slate-400 text-xs italic">No employees found. Ensure employees have logged in at least once.</td></tr>`;
+        return;
+      }
+
+      // Department mapping (from devUsers or default teams: Recruitment, Accounts, Sensitization)
+      const deptMap = {
+        'edyn': 'Accounts',
+        'soumita': 'Recruitment',
+        'anurag': 'Recruitment',
+        'nishant': 'Sensitization',
+        'sreedha': 'Sensitization',
+        'manohar': 'Recruitment',
+        'mohana': 'Accounts'
+      };
+      (state.devUsers || []).forEach(u => {
+        if (u && u.username) {
+          const uKey = u.username.toLowerCase();
+          deptMap[uKey] = u.department || deptMap[uKey] || 'Operations';
+        }
+      });
+
+      combinedUsers.sort().forEach(username => {
+        // Find this week's WFH for this user
+        const userWfh = allWfh.filter(r => (r.username || '').toLowerCase() === username);
+        const thisWeekRecord = userWfh.find(r => {
+          const d = (r.start_date || '').trim();
+          return d >= monStr && d <= sunStr;
+        });
+
+        let wfhDayCell = '';
+        let quotaCell = '';
+        let notesCell = '';
+        let actionsCell = '';
+
+        if (thisWeekRecord) {
+          const statusBadge = wfhStatusBadge(thisWeekRecord.status);
+          const dayLabel = `${dayName(thisWeekRecord.start_date)} (${thisWeekRecord.start_date})`;
+          wfhDayCell = `<div class="flex items-center space-x-2"><span class="font-semibold">${dayLabel}</span>${statusBadge}</div>`;
+          quotaCell = `<span class="text-xs font-semibold ${thisWeekRecord.status === 'approved' ? 'text-green-600' : 'text-amber-600'}">1/1 day</span>`;
+          notesCell = thisWeekRecord.reason || (thisWeekRecord.status === 'approved' ? 'Manager Assigned' : 'Change Requested');
+          actionsCell = `<button onclick="openAssignWfhModal('${username}', '${thisWeekRecord.request_id}')" class="px-2.5 py-1 text-[10px] font-bold bg-slate-100 hover:bg-brandBlue hover:text-white rounded-lg transition">Edit</button>`;
+        } else {
+          wfhDayCell = `<span class="text-slate-400 italic text-xs">Not yet assigned — Wednesday default applies</span>`;
+          quotaCell = `<span class="text-xs font-semibold text-slate-400">0/1 day</span>`;
+          notesCell = `<span class="text-slate-400 text-xs">Policy default (Wednesday)</span>`;
+          actionsCell = `<button onclick="openAssignWfhModal('${username}', null)" class="px-2.5 py-1 text-[10px] font-bold bg-indigo-50 hover:bg-brandBlue hover:text-white text-indigo-700 rounded-lg transition">Assign</button>`;
+        }
+
+        const dept = deptMap[username] || '';
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/60 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-semibold capitalize">${username}</td>
+          <td class="py-3 px-4 text-slate-500 capitalize">${dept || '—'}</td>
+          <td class="py-3 px-4">${wfhDayCell}</td>
+          <td class="py-3 px-4">${quotaCell}</td>
+          <td class="py-3 px-4 text-xs text-slate-500">${notesCell}</td>
+          <td class="py-3 px-4 text-right">${actionsCell}</td>
+        `;
+        rosterBody.appendChild(tr);
+      });
+    }
+
+    function changeMgrWfhWeek(direction, reset = false) {
+      if (reset) {
+        state.wfhWeekOffset = 0;
+      } else {
+        state.wfhWeekOffset += direction;
+      }
+      renderMgrWfhTab();
+    }
+
+    async function setWednesdayForAllCurrentWeek() {
+      if (!confirm('Apply Wednesday as the WFH day for ALL employees this week? Employees who already have an assignment for this week will be updated.')) return;
+
+      const monday = getWeekStart(state.wfhWeekOffset);
+      const wednesday = new Date(monday);
+      wednesday.setDate(monday.getDate() + 2);
+      const wednesdayStr = dateToStr(wednesday);
+
+      const defaultUsers = ['edyn', 'soumita', 'anurag', 'nishant', 'sreedha', 'manohar', 'mohana'];
+      const allUsers = (state.managerData.time_logs || []).map(l => (l.username || '').toLowerCase());
+      const devUsers = (state.devUsers || []).map(u => (u.username || '').toLowerCase());
+      const combinedUsers = [...new Set([...defaultUsers, ...allUsers, ...devUsers])].filter(u => u && u !== 'hana' && u !== 'sai');
+
+      if (combinedUsers.length === 0) {
+        alert('No employees found to assign WFH.');
+        return;
+      }
+
+      toggleLoader(true);
+      let successCount = 0;
+      for (const username of combinedUsers) {
+        const res = await callPython('api_request', {
+          action: 'save_wfh_schedule',
+          username: username,
+          date: wednesdayStr,
+          reason: 'Manager set Wednesday default for all',
+          status: 'approved'
+        });
+        if (res && res.success) successCount++;
+      }
+      toggleLoader(false);
+      alert(`Wednesday WFH applied for ${successCount} employee(s) for the week of ${wednesdayStr}.`);
+      loadManagerData();
+    }
+
+    function openAssignWfhModal(prefilledUsername = '', existingRequestId = null) {
+      // Populate employee dropdown
+      const select = document.getElementById('modal-wfh-emp-select');
+      if (select) {
+        select.innerHTML = '';
+        const defaultUsers = ['edyn', 'soumita', 'anurag', 'nishant', 'sreedha', 'manohar', 'mohana'];
+        const allUsers = (state.managerData.time_logs || []).map(l => (l.username || '').toLowerCase());
+        const devUsers = (state.devUsers || []).map(u => (u.username || '').toLowerCase());
+        const combinedUsers = [...new Set([...defaultUsers, ...allUsers, ...devUsers])].filter(u => u && u !== 'hana' && u !== 'sai').sort();
+        combinedUsers.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u;
+          opt.text = u.charAt(0).toUpperCase() + u.slice(1);
+          if (u === prefilledUsername.toLowerCase()) opt.selected = true;
+          select.appendChild(opt);
+        });
+      }
+
+      // Pre-fill date with Wednesday of selected week
+      const dateInput = document.getElementById('modal-wfh-date');
+      if (dateInput) {
+        const monday = getWeekStart(state.wfhWeekOffset);
+        const wednesday = new Date(monday);
+        wednesday.setDate(monday.getDate() + 2);
+        dateInput.value = dateToStr(wednesday);
+      }
+
+      // Store existing request id for update
+      const modal = document.getElementById('modal-assign-wfh');
+      if (modal) {
+        modal.dataset.existingId = existingRequestId || '';
+        modal.classList.remove('hidden');
+      }
+
+      const reasonInput = document.getElementById('modal-wfh-reason');
+      if (reasonInput) reasonInput.value = '';
+    }
+
+    function closeAssignWfhModal() {
+      const modal = document.getElementById('modal-assign-wfh');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function submitManagerWfhAssignment() {
+      const username = document.getElementById('modal-wfh-emp-select')?.value?.trim().toLowerCase();
+      const date = document.getElementById('modal-wfh-date')?.value;
+      const reason = document.getElementById('modal-wfh-reason')?.value?.trim() || 'Manager Assigned WFH';
+
+      if (!username || !date) {
+        alert('Please select an employee and a date.');
+        return;
+      }
+
+      // Validate weekday
+      const d = new Date(date + 'T12:00:00');
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) {
+        alert('WFH days must be Monday to Friday.');
+        return;
+      }
+
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'save_wfh_schedule',
+        username: username,
+        date: date,
+        reason: reason,
+        status: 'approved'
+      });
+      toggleLoader(false);
+
+      if (res && res.success) {
+        closeAssignWfhModal();
+        alert(`WFH day assigned: ${username.charAt(0).toUpperCase() + username.slice(1)} — ${dayName(date)}, ${date}`);
+        loadManagerData();
+      } else {
+        alert('Failed to save WFH schedule: ' + (res.error || 'Network error'));
+      }
+    }
+
+    async function processWfhRequest(requestId, newStatus) {
+      if (!confirm(`${newStatus === 'approved' ? 'Approve' : 'Reject'} this WFH day change request?`)) return;
+
+      toggleLoader(true);
+      const res = await callPython('api_request', {
+        action: 'update_leave_request_status',
+        request_id: requestId,
+        status: newStatus
+      });
+      toggleLoader(false);
+
+      if (res && res.success) {
+        alert(`WFH request ${newStatus === 'approved' ? 'approved ✓' : 'rejected'}.`);
+        loadManagerData();
+      } else {
+        alert('Failed to process WFH request: ' + (res.error || 'Network error'));
+      }
+    }
+
+    // ============================================================
+    // END WFH MODULE
+    // ============================================================
 
     function initializeApplication() {
       // Auto-restore session from LocalStorage (if any)
